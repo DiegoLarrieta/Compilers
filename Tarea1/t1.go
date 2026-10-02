@@ -1,5 +1,7 @@
 package main
 
+// repo : https://github.com/DiegoLarrieta/Compilers
+
 import "fmt"
 
 // Tarea 1: Implementar una pila (Stack) y una cola (Queue) en Go.
