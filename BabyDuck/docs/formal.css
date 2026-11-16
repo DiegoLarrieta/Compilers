@@ -1,0 +1,45 @@
+/* Formato de entrega formal (PDF): portada + encabezado con logo en cada página. */
+@page { size: letter; margin: 12mm 22mm 18mm; }
+* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+html, body { margin: 0; padding: 0; background: #fff; color: #000; font: 11.5pt/1.35 "Times New Roman", Times, serif; }
+.portada { height: 240mm; display: flex; flex-direction: column; align-items: center; text-align: center; page-break-after: always; }
+.portada img { width: 135mm; margin-top: 45mm; }
+.portada h1 { color: #0033a0; font: bold 19pt "Times New Roman", serif; margin: 18mm 0 26mm; }
+.portada p { margin: 0 0 3.5mm; font-size: 16pt; }
+.portada .materia { margin-top: 22mm; }
+table.hoja { width: 100%; border-collapse: collapse; }
+table.hoja > thead > tr > td { padding: 0 0 7mm; border: 0; }
+table.hoja > thead img { height: 14mm; margin-left: -3mm; }
+table.hoja > tbody > tr > td { padding: 0; border: 0; }
+.titulo { text-align: center; font: bold 17pt "Times New Roman", serif; margin: 8mm 10mm 7mm; }
+h2 { font: normal 17pt "Times New Roman", serif; margin: 7mm 0 3mm; page-break-after: avoid; }
+h3 { font: bold 12pt "Times New Roman", serif; margin: 5mm 0 2mm; page-break-after: avoid; }
+p { margin: 0 0 3mm; }
+ul, ol { margin: 0 0 3mm; padding-left: 7mm; }
+li { margin-bottom: 1mm; }
+code { font: 9.5pt Menlo, "Courier New", monospace; }
+pre { font: 8pt/1.35 Menlo, "Courier New", monospace; border: 0.75pt solid #000; padding: 2.5mm 3mm; margin: 0 0 4mm; white-space: pre-wrap; word-break: break-word; }
+pre code { font: inherit; }
+.pie-codigo { font: 9pt Menlo, monospace; margin-bottom: 1mm; page-break-after: avoid; }
+.tabla { margin: 0 0 4mm; }
+.tabla table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+.tabla th, .tabla td { border: 1pt solid #000; padding: 1.5mm 2mm; text-align: left; vertical-align: top; }
+.tabla tr { page-break-inside: avoid; }
+.ok { font-weight: bold; } .err { font-weight: bold; }
+.pt, .rr-p { display: inline-flex; align-items: center; justify-content: center; min-width: 5.2mm; height: 5.2mm; padding: 0 1mm; border-radius: 99px; background: #f2b705; color: #000; font: bold 8pt Menlo, monospace; flex: none; }
+.pt.s, .rr-p.rr-ps { background: #fff; border: 1.2pt solid #f2b705; }
+.leyenda { font-size: 10pt; } .leyenda span { margin-right: 5mm; }
+.diagramas { margin-bottom: 4mm; }
+.rr { display: block; border: 0.75pt solid #000; padding: 2mm 3mm 3mm; margin-bottom: 2mm; page-break-inside: avoid; zoom: .68; }
+.rr-name { display: block; font: bold 10pt Menlo, monospace; margin-bottom: 2mm; }
+.rr-body, .rr-seq { display: inline-flex; align-items: center; white-space: nowrap; }
+.rr-ln { display: inline-block; width: 13px; height: 0; border-top: 1.5px solid #000; flex: none; }
+.rr-ln.rr-fill { flex: 1 1 13px; }
+.rr-dot { width: 7px; height: 7px; border-radius: 50%; background: #000; flex: none; }
+.rr-alt { display: inline-flex; flex-direction: column; gap: 5px; border-left: 1.5px solid #000; border-right: 1.5px solid #000; border-radius: 9px; }
+.rr-row { display: flex; align-items: center; min-height: 1.7rem; }
+.rr-back .rr-ln { border-top-style: dashed; }
+.rr-loop { font: bold 11pt Menlo, monospace; padding: 0 2px; }
+.rr-t, .rr-n { font: 10pt/1 Menlo, monospace; padding: 5px 9px; border: 1.5px solid #000; }
+.rr-t { border-radius: 99px; background: #eee; }
+.rr-n { border-radius: 2px; border-color: #0033a0; color: #0033a0; }

@@ -1,0 +1,8 @@
+program ejemplo;
+var A, B, C, D, E, F, G, H, J, K : int;
+main {
+    A = B + C * (D - E / F) * H;
+    G = (A + B) * C - D * E / (F + G);
+    print(J != K * 2);
+}
+end

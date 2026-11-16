@@ -1,0 +1,8 @@
+program malo;
+var a : int;
+    x : float;
+main {
+    x = 2.5;
+    a = x * 2;
+}
+end

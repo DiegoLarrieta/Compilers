@@ -1,0 +1,17 @@
+program expresiones;
+var a, b, c, d : int;
+    x, y : float;
+main {
+    a = 2;
+    b = 3;
+    c = 4;
+    d = a + b * c;
+    d = (a + b) * c;
+    d = a - b - c;
+    d = a * b + c / a - b;
+    x = a / 2.0;
+    y = -x * (a + b) - 1.5;
+    print("d vale", d, "y la suma", a + b);
+    print(a * 2 > b + c);
+}
+end

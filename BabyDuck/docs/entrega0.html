@@ -1,0 +1,137 @@
+<h2>1. El lenguaje en un vistazo</h2>
+<p>BabyDuck es un mini-lenguaje imperativo. Un programa tiene un nombre, variables globales opcionales, funciones <code>void</code> opcionales y un bloque <code>main</code>. Solo hay dos tipos de dato (<code>int</code> y <code>float</code>) y cinco estatutos: asignación, condición, ciclo, llamada a función e impresión.</p>
+<pre><code>program ejemplo;
+var i, total : int;
+    promedio : float;
+
+void muestra(valor : int) [
+    {
+        print("valor", valor);
+    }
+];
+
+main {
+    i = 0;
+    total = 0;
+    while (i &lt; 10) do {
+        total = total + i * 2;
+        i = i + 1;
+    };
+    if (total &gt; 50) {
+        muestra(total);
+    } else {
+        print("total chico");
+    };
+    promedio = total / 10.0;
+}
+end</code></pre>
+
+<h2>2. Expresiones regulares de los elementos léxicos</h2>
+<p>Los únicos elementos que necesitan una expresión regular "de verdad" son los identificadores y las constantes. Las palabras reservadas, operadores y signos de puntuación son texto fijo.</p>
+<div class="tabla"><table>
+<thead><tr><th>Elemento</th><th>Expresión regular</th><th>Acepta</th><th>Rechaza</th></tr></thead>
+<tbody>
+<tr><td>Identificador</td><td><code>[A-Za-z_][A-Za-z0-9_]*</code></td><td><code>x</code> <code>total_2</code> <code>_aux</code></td><td><code>2x</code> <code>mi-var</code></td></tr>
+<tr><td>Constante entera</td><td><code>[0-9]+</code></td><td><code>0</code> <code>42</code> <code>007</code></td><td><code>4a</code></td></tr>
+<tr><td>Constante flotante</td><td><code>[0-9]+\.[0-9]+</code></td><td><code>3.14</code> <code>0.5</code></td><td><code>.5</code> <code>3.</code></td></tr>
+<tr><td>Letrero (string)</td><td><code>"[^"\n]*"</code></td><td><code>"hola mundo"</code> <code>""</code></td><td>comillas sin cerrar, saltos de línea</td></tr>
+<tr><td>Espacios (se ignoran)</td><td><code>[ \t\r\n]+</code></td><td colspan="2">No generan token; los saltos de línea solo se cuentan para reportar errores.</td></tr>
+</tbody></table></div>
+<ul>
+<li>El signo de un número no es parte de la constante: <code>-5</code> son dos tokens (<code>-</code> y <code>5</code>). El signo lo maneja la gramática en <code>FACTOR</code>.</li>
+<li>Una palabra reservada tiene forma de identificador. Primero se reconoce como identificador y después se consulta la tabla de palabras reservadas.</li>
+<li>El lenguaje distingue mayúsculas de minúsculas: <code>if</code> es palabra reservada, <code>If</code> es un identificador.</li>
+</ul>
+
+<h2>3. Lista de tokens</h2>
+<p>El lenguaje reconoce 33 tokens.</p>
+<div class="tabla"><table>
+<thead><tr><th>Grupo</th><th>Token</th><th>Lexema o patrón</th></tr></thead>
+<tbody>
+<tr><td rowspan="12">Palabras reservadas (12)</td><td><code>PROGRAM</code></td><td><code>program</code></td></tr>
+<tr><td><code>MAIN</code></td><td><code>main</code></td></tr>
+<tr><td><code>END</code></td><td><code>end</code></td></tr>
+<tr><td><code>VAR</code></td><td><code>var</code></td></tr>
+<tr><td><code>INT</code></td><td><code>int</code></td></tr>
+<tr><td><code>FLOAT</code></td><td><code>float</code></td></tr>
+<tr><td><code>VOID</code></td><td><code>void</code></td></tr>
+<tr><td><code>PRINT</code></td><td><code>print</code></td></tr>
+<tr><td><code>IF</code></td><td><code>if</code></td></tr>
+<tr><td><code>ELSE</code></td><td><code>else</code></td></tr>
+<tr><td><code>WHILE</code></td><td><code>while</code></td></tr>
+<tr><td><code>DO</code></td><td><code>do</code></td></tr>
+<tr><td rowspan="4">Identificador y constantes (4)</td><td><code>ID</code></td><td><code>[A-Za-z_][A-Za-z0-9_]*</code></td></tr>
+<tr><td><code>CTE_INT</code></td><td><code>[0-9]+</code></td></tr>
+<tr><td><code>CTE_FLOAT</code></td><td><code>[0-9]+\.[0-9]+</code></td></tr>
+<tr><td><code>CTE_STRING</code></td><td><code>"[^"\n]*"</code></td></tr>
+<tr><td rowspan="8">Operadores (8)</td><td><code>PLUS</code></td><td><code>+</code></td></tr>
+<tr><td><code>MINUS</code></td><td><code>-</code></td></tr>
+<tr><td><code>TIMES</code></td><td><code>*</code></td></tr>
+<tr><td><code>DIVIDE</code></td><td><code>/</code></td></tr>
+<tr><td><code>ASSIGN</code></td><td><code>=</code></td></tr>
+<tr><td><code>GT</code></td><td><code>&gt;</code></td></tr>
+<tr><td><code>LT</code></td><td><code>&lt;</code></td></tr>
+<tr><td><code>NE</code></td><td><code>!=</code></td></tr>
+<tr><td rowspan="9">Puntuación (9)</td><td><code>SEMICOLON</code></td><td><code>;</code></td></tr>
+<tr><td><code>COMMA</code></td><td><code>,</code></td></tr>
+<tr><td><code>COLON</code></td><td><code>:</code></td></tr>
+<tr><td><code>LPAREN</code></td><td><code>(</code></td></tr>
+<tr><td><code>RPAREN</code></td><td><code>)</code></td></tr>
+<tr><td><code>LBRACE</code></td><td><code>{</code></td></tr>
+<tr><td><code>RBRACE</code></td><td><code>}</code></td></tr>
+<tr><td><code>LBRACKET</code></td><td><code>[</code></td></tr>
+<tr><td><code>RBRACKET</code></td><td><code>]</code></td></tr>
+</tbody></table></div>
+
+<h2>4. Diagramas de sintaxis</h2>
+<p>Estos son los diagramas del lenguaje tal como se interpretaron para escribir la gramática. Se leen de izquierda a derecha siguiendo las líneas.</p>
+<p class="leyenda"><span><span class="rr-t">main</span> terminal (token)</span><span><span class="rr-n">BODY</span> no terminal (otro diagrama)</span><span>↺ camino de regreso (repetición)</span></p>
+<div class="diagramas">
+<div class="rr" data-rule="PROGRAMA">'program' 'id' ';' [ VARS ] { FUNCS } 'main' BODY 'end'</div>
+<div class="rr" data-rule="VARS">'var' { { 'id' / ',' }+ ':' TYPE ';' }+</div>
+<div class="rr" data-rule="TYPE">( 'int' | 'float' )</div>
+<div class="rr" data-rule="FUNCS">'void' 'id' '(' [ { 'id' ':' TYPE / ',' }+ ] ')' '[' [ VARS ] BODY ']' ';'</div>
+<div class="rr" data-rule="BODY">'{' { STATEMENT } '}'</div>
+<div class="rr" data-rule="STATEMENT">( ASSIGN | CONDITION | CYCLE | F_CALL | PRINT )</div>
+<div class="rr" data-rule="ASSIGN">'id' '=' EXPRESIÓN ';'</div>
+<div class="rr" data-rule="CONDITION">'if' '(' EXPRESIÓN ')' BODY [ 'else' BODY ] ';'</div>
+<div class="rr" data-rule="CYCLE">'while' '(' EXPRESIÓN ')' 'do' BODY ';'</div>
+<div class="rr" data-rule="F_CALL">'id' '(' [ { EXPRESIÓN / ',' }+ ] ')' ';'</div>
+<div class="rr" data-rule="PRINT">'print' '(' { ( EXPRESIÓN | 'cte_string' ) / ',' }+ ')' ';'</div>
+<div class="rr" data-rule="EXPRESIÓN">EXP [ ( '&gt;' | '&lt;' | '!=' ) EXP ]</div>
+<div class="rr" data-rule="EXP">{ TÉRMINO / ( '+' | '-' ) }+</div>
+<div class="rr" data-rule="TÉRMINO">{ FACTOR / ( '*' | '/' ) }+</div>
+<div class="rr" data-rule="FACTOR">( '(' EXPRESIÓN ')' | [ ( '+' | '-' ) ] ( 'id' | CTE ) )</div>
+<div class="rr" data-rule="CTE">( 'cte_int' | 'cte_float' )</div>
+</div>
+
+<h2>5. Gramática libre de contexto</h2>
+<p>Cada diagrama se convirtió en reglas BNF. Los nombres en MAYÚSCULAS son tokens de la sección 3, los nombres en minúsculas son no terminales y <code>ε</code> es la cadena vacía. El símbolo inicial es <code>programa</code>.</p>
+<p>Como BNF no tiene "opcional" ni "repetir", cada uno se escribe con una regla auxiliar:</p>
+<ul>
+<li><strong>Opcional</strong>: una regla con dos alternativas, el elemento o <code>ε</code> (por ejemplo <code>vars_opt</code>, <code>else_opt</code>).</li>
+<li><strong>Repetición</strong>: una regla recursiva (por ejemplo <code>estatutos ::= estatuto estatutos | ε</code>).</li>
+<li><strong>Lista separada por comas</strong>: <code>lista ::= elemento COMMA lista | elemento</code>.</li>
+</ul>
+<pre><code>{{gramatica:Entrega1}}</code></pre>
+<p>La precedencia de los operadores queda expresada en los niveles de la gramática, sin reglas extra: <code>expresion</code> (relacionales) llama a <code>exp</code> (<code>+ -</code>), que llama a <code>termino</code> (<code>* /</code>), que llama a <code>factor</code>. Lo que está más abajo se agrupa primero.</p>
+
+<div class="nota revisar">
+<p><strong>Supuestos que hay que comparar contra el archivo del curso</strong></p>
+<p>Los diagramas de la sección 4 se redibujaron a partir de la definición conocida de BabyDuck, no del archivo original del curso. Antes de entregar conviene revisar estos puntos contra ese archivo:</p>
+<ul>
+<li>Operadores relacionales: aquí son <code>&gt;</code>, <code>&lt;</code> y <code>!=</code>. Si el diagrama incluye <code>==</code>, hay que agregar un token y una alternativa en <code>op_rel</code>.</li>
+<li>El signo unario (<code>+</code> o <code>-</code>) solo se permite antes de un identificador o una constante, no antes de un paréntesis.</li>
+<li><code>if</code> y <code>while</code> terminan con <code>;</code> después de su bloque, y la función termina con <code>];</code>.</li>
+<li>El lenguaje no tiene comentarios.</li>
+</ul>
+</div>
+
+<h2>6. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Qué se le pidió</th><td>Reconstruir las entregas 0 a 3 del proyecto BabyDuck en Python, una carpeta por entrega, con el código documentado y un documento por entrega. Se le dieron las capturas de las instrucciones de Canvas de cada entrega.</td></tr>
+<tr><th>Qué generó</th><td>Las expresiones regulares, la lista de tokens, los diagramas redibujados, la gramática BNF y este documento.</td></tr>
+<tr><th>Qué se revisó a mano</th><td>La gramática de la sección 5 no está escrita a mano en este documento: se extrae del parser de la entrega 1, que pasa su plan de pruebas. Falta comparar los diagramas con el archivo original del curso (ver los supuestos de arriba).</td></tr>
+</tbody></table></div>

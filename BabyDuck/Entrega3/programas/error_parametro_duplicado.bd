@@ -1,0 +1,8 @@
+program malo;
+void f(x : int, y : float) [
+    var x : float;
+    { }
+];
+main {
+}
+end

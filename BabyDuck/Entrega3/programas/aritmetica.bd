@@ -1,0 +1,12 @@
+program aritmetica;
+var a, b, c : int;
+    x, y : float;
+main {
+    a = 5;
+    b = 10;
+    c = a + b * 2 - (a - 3) / 2;
+    x = 3.5;
+    y = -x * (a + b) / 2.0;
+    print("resultado", c, y, a > b);
+}
+end

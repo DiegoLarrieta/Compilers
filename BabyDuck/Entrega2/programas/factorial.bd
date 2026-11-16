@@ -1,0 +1,35 @@
+program factorial;
+var n, resultado : int;
+
+void calcula(limite : int) [
+    var i : int;
+    {
+        i = 1;
+        resultado = 1;
+        while (i < limite + 1) do {
+            resultado = resultado * i;
+            i = i + 1;
+        };
+    }
+];
+
+void saluda() [
+    {
+        print("Factorial en BabyDuck");
+    }
+];
+
+main {
+    n = 5;
+    saluda();
+    calcula(n);
+    if (resultado > 100) {
+        print("grande", resultado);
+    } else {
+        print("chico", resultado);
+    };
+    if (n != 0) {
+        print("n no es cero");
+    };
+}
+end

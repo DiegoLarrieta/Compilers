@@ -1,0 +1,522 @@
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>BabyDuck Entrega 3</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: una sola columna de lectura (~46rem); tablas, código y diagramas
+   pueden ser más anchos y hacen scroll dentro de su propio contenedor. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #1a2230;
+  --muted: #5a6577;
+  --line: #d8dde6;
+  --accent: #1d5bb8;
+  --duck: #f2b705;
+  --on-duck: #2b2100;
+  --code-bg: #edf0f5;
+  --ok: #1c7447;
+  --err: #b0362e;
+  --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151c; --surface: #19202a; --ink: #e5e9f0; --muted: #9ba7b9;
+    --line: #2d3644; --accent: #84b3ff; --duck: #f5c531; --on-duck: #2b2100;
+    --code-bg: #1e2531; --ok: #62c692; --err: #f28d83; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151c; --surface: #19202a; --ink: #e5e9f0; --muted: #9ba7b9;
+  --line: #2d3644; --accent: #84b3ff; --duck: #f5c531; --on-duck: #2b2100;
+  --code-bg: #1e2531; --ok: #62c692; --err: #f28d83; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 400 1rem/1.65 var(--font-body);
+  padding-block: 2.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.pagina { max-width: 46rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.pagina > * { margin: 0; min-width: 0; }
+.eyebrow { font: 500 .78rem/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 700 2.1rem/1.15 var(--font-display); text-wrap: balance; letter-spacing: -.01em; }
+h2 { font: 600 1.4rem/1.25 var(--font-display); text-wrap: balance; margin-top: 2rem !important; padding-top: 1.4rem; border-top: 1px solid var(--line); }
+h3 { font: 600 1.05rem/1.3 var(--font-display); margin-top: .6rem !important; }
+.lead { font-size: 1.1rem; color: var(--muted); }
+a { color: var(--accent); }
+ul, ol { padding-left: 1.3rem; display: flex; flex-direction: column; gap: .35rem; }
+li > ul { margin-top: .35rem; }
+code { font: 500 .88em var(--font-mono); background: var(--code-bg); padding: .08em .35em; border-radius: 4px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: .9rem 1rem; overflow-x: auto; font: 400 .82rem/1.55 var(--font-mono); tab-size: 4; }
+pre code { background: none; padding: 0; font: inherit; }
+.pie-codigo { font: 500 .75rem var(--font-mono); color: var(--muted); margin-bottom: -.8rem !important; }
+
+/* Ruta de entregas */
+.ruta { list-style: none; padding: 0; display: flex; flex-direction: row; flex-wrap: wrap; gap: .4rem; font: 500 .8rem var(--font-mono); }
+.ruta li { border: 1px solid var(--line); border-radius: 999px; padding: .2rem .7rem; color: var(--muted); }
+.ruta li[aria-current] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* Tablas */
+.tabla { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child > td { border-bottom: 0; }
+th { font: 600 .72rem var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td.err, .err { color: var(--err); font-weight: 600; }
+td.ok, .ok { color: var(--ok); font-weight: 600; }
+td code { white-space: nowrap; }
+
+/* Notas */
+.nota { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: .85rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.nota > * { margin: 0; }
+.nota strong:first-child { font-family: var(--font-display); }
+.nota.revisar { border-color: var(--duck); border-width: 2px; }
+
+/* Marcador de punto neurálgico (en texto y tablas) */
+.pt, .rr-p { display: inline-flex; align-items: center; justify-content: center; min-width: 1.55rem; height: 1.55rem; padding: 0 .3rem; border-radius: 999px; background: var(--duck); color: var(--on-duck); font: 700 .72rem/1 var(--font-mono); flex: none; }
+.pt.s, .rr-p.rr-ps { background: transparent; color: var(--ink); border: 1.5px solid var(--duck); }
+
+/* Diagramas de sintaxis */
+.diagramas { display: flex; flex-direction: column; gap: .6rem; }
+.rr { display: block; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: .7rem .9rem .9rem; }
+.rr-name { display: block; font: 600 .74rem var(--font-mono); letter-spacing: .08em; color: var(--muted); margin-bottom: .55rem; }
+.rr-body, .rr-seq { display: inline-flex; align-items: center; white-space: nowrap; }
+.rr-ln { display: inline-block; width: 13px; height: 0; border-top: 1.5px solid var(--muted); flex: none; }
+.rr-ln.rr-fill { flex: 1 1 13px; }
+.rr-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+.rr-alt { display: inline-flex; flex-direction: column; gap: 5px; border-left: 1.5px solid var(--muted); border-right: 1.5px solid var(--muted); border-radius: 9px; }
+.rr-row { display: flex; align-items: center; min-height: 1.7rem; }
+.rr-back .rr-ln { border-top-style: dashed; }
+.rr-loop { font: 600 .85rem var(--font-mono); color: var(--muted); padding: 0 .15rem; }
+.rr-t, .rr-n { font: 500 .8rem/1 var(--font-mono); padding: .38rem .6rem; border: 1.5px solid var(--ink); }
+.rr-t { border-radius: 999px; background: var(--code-bg); }
+.rr-n { border-radius: 3px; border-color: var(--accent); color: var(--accent); }
+.leyenda { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; font-size: .85rem; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: .4rem; }
+
+/* Esquema de estructuras */
+.esquema { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; }
+.esquema > div { border: 1.5px solid var(--ink); border-radius: 4px; background: var(--surface); min-width: 0; }
+.esquema h4 { margin: 0; padding: .4rem .7rem; font: 600 .78rem var(--font-mono); letter-spacing: .05em; border-bottom: 1.5px solid var(--ink); background: var(--code-bg); }
+.esquema dl { margin: 0; padding: .5rem .7rem; display: grid; grid-template-columns: auto 1fr; gap: .2rem .7rem; font-size: .85rem; }
+.esquema dt { font: 500 .8rem var(--font-mono); }
+.esquema dd { margin: 0; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 30rem) { h1 { font-size: 1.65rem; } body { font-size: .96rem; } }
+</style>
+<main class="pagina">
+<p class="eyebrow">TC3002B · Compiladores · Proyecto BabyDuck</p>
+<h1>Entrega 3: Cuádruplos</h1>
+<p class="lead">Pilas, fila y traducción de expresiones y estatutos lineales a cuádruplos.</p>
+<ol class="ruta" aria-label="Entregas del proyecto"><li>Entrega 0 · Léxico y gramática</li><li>Entrega 1 · Scanner y parser</li><li>Entrega 2 · Semántica de variables</li><li aria-current="step">Entrega 3 · Cuádruplos</li></ol>
+<h2>1. Avance real de esta entrega</h2>
+<div class="tabla"><table>
+<thead><tr><th>Elemento</th><th>Estado</th><th>Detalle</th></tr></thead>
+<tbody>
+<tr><td>Pilas de operandos, tipos y operadores; fila de cuádruplos</td><td class="ok">Completo</td><td><code>estructuras.py</code></td></tr>
+<tr><td>Expresiones aritméticas (<code>+ - * /</code>, paréntesis, signo unario)</td><td class="ok">Completo</td><td>Con precedencia y asociatividad izquierda</td></tr>
+<tr><td>Expresiones relacionales (<code>&gt; &lt; !=</code>)</td><td class="ok">Completo</td><td></td></tr>
+<tr><td>Verificación de tipos con el cubo semántico</td><td class="ok">Completo</td><td>En cada operación y en la asignación</td></tr>
+<tr><td>Estatutos lineales: asignación y <code>print</code></td><td class="ok">Completo</td><td></td></tr>
+<tr><td><code>if</code> y <code>while</code></td><td>Parcial</td><td>Se traducen su condición y su cuerpo, y se valida que la condición sea booleana. Faltan los saltos (<code>GOTOF</code>, <code>GOTO</code>); corresponden a los estatutos no lineales.</td></tr>
+<tr><td>Llamadas a función</td><td>Parcial</td><td>Se traducen las expresiones de los argumentos. Falta el paso de parámetros y el salto a la función.</td></tr>
+</tbody></table></div>
+
+<h2>2. Pilas y fila</h2>
+<div class="tabla"><table>
+<thead><tr><th>Estructura</th><th>Nombre en el código</th><th>Qué guarda</th><th>Por qué esa estructura</th></tr></thead>
+<tbody>
+<tr><td>Pila de operandos (PilaO)</td><td><code>pila_operandos</code></td><td>Nombres de variables, constantes y temporales que esperan a ser operados.</td><td rowspan="3">Una expresión se resuelve de adentro hacia afuera: lo último que se leyó es lo primero que se necesita. Eso es exactamente una pila (LIFO).</td></tr>
+<tr><td>Pila de tipos (PTipos)</td><td><code>pila_tipos</code></td><td>El tipo de cada operando. Va en paralelo a PilaO: se mete y se saca al mismo tiempo.</td></tr>
+<tr><td>Pila de operadores (POper)</td><td><code>pila_operadores</code></td><td>Operadores que todavía no se pueden resolver, y los fondos falsos de los paréntesis.</td></tr>
+<tr><td>Fila de cuádruplos</td><td><code>fila</code></td><td>Los cuádruplos, en el orden en que se generan.</td><td>Se ejecutarán en el mismo orden en que se generaron: el primero que entra es el primero que sale (FIFO).</td></tr>
+</tbody></table></div>
+<h3>Implementación: <code>estructuras.py</code></h3>
+<div class="tabla"><table>
+<thead><tr><th>Clase</th><th>Por dentro</th><th>Operaciones</th><th>Costo</th></tr></thead>
+<tbody>
+<tr><td><code>Pila</code></td><td><code>list</code> de Python; el tope es el final de la lista.</td><td><code>meter</code> (push), <code>sacar</code> (pop), <code>tope</code> (top), <code>esta_vacia</code></td><td>O(1) cada una</td></tr>
+<tr><td><code>Fila</code></td><td><code>collections.deque</code></td><td><code>encolar</code>, <code>desencolar</code>, <code>frente</code>, <code>esta_vacia</code>, recorrido en orden</td><td>O(1) cada una. Con una <code>list</code>, sacar del frente costaría O(n).</td></tr>
+</tbody></table></div>
+<p>Las dos clases exponen solo las operaciones propias de su estructura. El resto del compilador no puede, por ejemplo, sacar un elemento de en medio de una pila.</p>
+
+<h2>3. Formato de los cuádruplos</h2>
+<p>Un cuádruplo es una instrucción con cuatro campos: <code>(operador, operando izquierdo, operando derecho, resultado)</code>. Un campo que no se usa se muestra como <code>_</code>. Los resultados intermedios se guardan en temporales <code>t1</code>, <code>t2</code>, … que genera el compilador.</p>
+<div class="tabla"><table>
+<thead><tr><th>Operador</th><th>Cuádruplo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><code>+ - * /</code></td><td><code>(+, a, b, t1)</code></td><td>t1 = a + b</td></tr>
+<tr><td><code>&gt; &lt; !=</code></td><td><code>(&gt;, a, b, t1)</code></td><td>t1 = a &gt; b (resultado booleano)</td></tr>
+<tr><td><code>neg</code></td><td><code>(neg, a, _, t1)</code></td><td>t1 = -a (menos unario sobre una variable)</td></tr>
+<tr><td><code>=</code></td><td><code>(=, t1, _, a)</code></td><td>a = t1</td></tr>
+<tr><td><code>print</code></td><td><code>(print, _, _, a)</code></td><td>Imprime un valor o un letrero</td></tr>
+</tbody></table></div>
+<p>En esta entrega los operandos son nombres de variables, constantes y temporales. Las direcciones de memoria se asignan en una entrega posterior.</p>
+
+<h2>4. Algoritmo de traducción</h2>
+<p>La idea central: un operador no se puede traducir cuando se lee, porque todavía falta leer su operando derecho. Se guarda en POper y se resuelve después, en el momento en que ya se sabe que sus dos operandos están completos.</p>
+<p><strong>Resolver un operador</strong> (método <code>resolver</code> de <code>cuadruplos.py</code>) significa:</p>
+<ol>
+<li>Sacar el operador de POper.</li>
+<li>Sacar el operando derecho y después el izquierdo de PilaO, con sus tipos de PTipos. El derecho sale primero porque fue el último en entrar.</li>
+<li>Consultar el cubo semántico con el operador y los dos tipos. Si da error, se reporta "tipos incompatibles".</li>
+<li>Pedir un temporal nuevo y generar el cuádruplo <code>(operador, izquierdo, derecho, temporal)</code>.</li>
+<li>Meter el temporal a PilaO y su tipo a PTipos: es el operando de la siguiente operación.</li>
+</ol>
+<p><strong>La precedencia sale de cuándo se intenta resolver:</strong></p>
+<ul>
+<li>Al terminar un <strong>factor</strong> se resuelve el tope de POper solo si es <code>*</code> o <code>/</code>.</li>
+<li>Al terminar un <strong>término</strong> se resuelve el tope solo si es <code>+</code> o <code>-</code>.</li>
+<li>Al terminar la segunda <strong>exp</strong> de una comparación se resuelve el relacional.</li>
+</ul>
+<p>Un <code>+</code> pendiente no se resuelve al terminar un factor, así que espera a que termine toda la multiplicación que le sigue. Como cada operador se resuelve en cuanto su operando derecho está completo, las operaciones del mismo nivel quedan asociadas por la izquierda: <code>a - b - c</code> se traduce como <code>(a - b) - c</code>.</p>
+<p><strong>Paréntesis:</strong> al abrir uno se mete un <em>fondo falso</em> a POper. Como el fondo falso no es <code>+ - * /</code>, tapa los operadores que estaban pendientes afuera y lo de adentro se resuelve primero. Al cerrar el paréntesis se quita.</p>
+
+<h2>5. Diagramas con puntos neurálgicos</h2>
+<p class="leyenda"><span><span class="pt">4</span> punto de generación de código (esta entrega)</span><span><span class="pt s">S7</span> punto semántico de la entrega 2</span></p>
+<div class="diagramas">
+<div class="rr" data-rule="EXPRESIÓN">EXP [ ( '&gt;' | '&lt;' | '!=' ) @3 EXP @6 ]</div>
+<div class="rr" data-rule="EXP">{ TÉRMINO @5 / ( '+' | '-' ) @3 }+</div>
+<div class="rr" data-rule="TÉRMINO">{ FACTOR @4 / ( '*' | '/' ) @3 }+</div>
+<div class="rr" data-rule="FACTOR">( '(' @7 EXPRESIÓN ')' @8 | [ ( '+' | '-' ) ] ( 'id' @S7 @1 | CTE @2 ) @9 )</div>
+<div class="rr" data-rule="ASSIGN">'id' @S6 @10 '=' @11 EXPRESIÓN @12 ';'</div>
+<div class="rr" data-rule="PRINT">'print' '(' { ( EXPRESIÓN @13 | 'cte_string' @14 ) / ',' }+ ')' ';'</div>
+<div class="rr" data-rule="CONDITION">'if' '(' EXPRESIÓN ')' @15 BODY [ 'else' BODY ] ';'</div>
+<div class="rr" data-rule="CYCLE">'while' '(' EXPRESIÓN ')' @15 'do' BODY ';'</div>
+<div class="rr" data-rule="F_CALL">'id' @S8 '(' [ { EXPRESIÓN @16 / ',' }+ ] ')' ';'</div>
+<div class="rr" data-rule="PROGRAMA">'program' 'id' @S1 ';' [ VARS ] { FUNCS } 'main' BODY 'end'</div>
+<div class="rr" data-rule="VARS">'var' { { 'id' / ',' }+ ':' TYPE ';' @S2 }+</div>
+<div class="rr" data-rule="FUNCS">'void' 'id' @S3 '(' [ { 'id' ':' TYPE @S4 / ',' }+ ] ')' '[' [ VARS ] BODY ']' @S5 ';'</div>
+</div>
+
+<h3>Acción de cada punto</h3>
+<div class="tabla"><table>
+<thead><tr><th>Punto</th><th>Acción</th><th>En <code>parser.py</code></th></tr></thead>
+<tbody>
+<tr><td><span class="pt">1</span></td><td>Mete el identificador a PilaO y su tipo (tomado de la tabla de variables) a PTipos.</td><td><code>p_operando_id</code></td></tr>
+<tr><td><span class="pt">2</span></td><td>Mete la constante a PilaO y su tipo a PTipos.</td><td><code>p_operando_cte</code></td></tr>
+<tr><td><span class="pt">3</span></td><td>Mete el operador que se acaba de leer a POper.</td><td><code>np_meter_operador</code></td></tr>
+<tr><td><span class="pt">4</span></td><td>Si el tope de POper es <code>*</code> o <code>/</code>, lo resuelve (genera su cuádruplo).</td><td><code>np_resolver_mult</code></td></tr>
+<tr><td><span class="pt">5</span></td><td>Si el tope de POper es <code>+</code> o <code>-</code>, lo resuelve.</td><td><code>np_resolver_suma</code></td></tr>
+<tr><td><span class="pt">6</span></td><td>Si el tope de POper es un relacional, lo resuelve.</td><td><code>np_resolver_rel</code></td></tr>
+<tr><td><span class="pt">7</span></td><td>Mete el fondo falso a POper.</td><td><code>np_fondo_falso</code></td></tr>
+<tr><td><span class="pt">8</span></td><td>Quita el fondo falso de POper.</td><td><code>np_quitar_fondo</code></td></tr>
+<tr><td><span class="pt">9</span></td><td>Solo si el signo fue <code>-</code>: si el operando es constante le cambia el signo; si es variable genera <code>(neg, x, _, t)</code>.</td><td><code>np_negar</code></td></tr>
+<tr><td><span class="pt">10</span></td><td>Mete la variable destino a PilaO y su tipo a PTipos.</td><td><code>np_meter_destino</code></td></tr>
+<tr><td><span class="pt">11</span></td><td>Mete <code>=</code> a POper (misma acción que el punto 3).</td><td><code>np_meter_operador</code></td></tr>
+<tr><td><span class="pt">12</span></td><td>Saca <code>=</code>, el valor y el destino. Valida los tipos con el cubo y genera <code>(=, valor, _, destino)</code>.</td><td><code>np_generar_asigna</code></td></tr>
+<tr><td><span class="pt">13</span></td><td>Saca el resultado de la expresión y genera <code>(print, _, _, valor)</code>.</td><td><code>np_print_expresion</code></td></tr>
+<tr><td><span class="pt">14</span></td><td>Genera <code>(print, _, _, "letrero")</code>. No usa las pilas.</td><td><code>p_item_print_letrero</code></td></tr>
+<tr><td><span class="pt">15</span></td><td>Saca el resultado de la condición y valida que sea <code>bool</code>. Aquí irá el <code>GOTOF</code>.</td><td><code>np_verificar_condicion</code></td></tr>
+<tr><td><span class="pt">16</span></td><td>Saca de la pila el resultado del argumento. Aquí irá el paso de parámetros.</td><td><code>np_sacar_argumento</code></td></tr>
+<tr><td><span class="pt s">S1</span>–<span class="pt s">S8</span></td><td>Puntos de la entrega 2: crean y llenan el directorio de funciones y las tablas de variables, y validan que variables y funciones estén declaradas.</td><td>Ver entrega 2</td></tr>
+</tbody></table></div>
+<p>En el código, la gramática de expresiones quedó así. Cada <code>np_*</code> es un no terminal vacío puesto exactamente donde va el punto:</p>
+<pre><code>expresion       : exp expresion_resto
+expresion_resto : op_rel np_meter_operador exp np_resolver_rel   |  empty
+
+exp             : termino np_resolver_suma exp_resto
+exp_resto       : PLUS np_meter_operador exp  |  MINUS np_meter_operador exp  |  empty
+
+termino         : factor np_resolver_mult termino_resto
+termino_resto   : TIMES np_meter_operador termino  |  DIVIDE np_meter_operador termino  |  empty
+
+factor          : LPAREN np_fondo_falso expresion RPAREN np_quitar_fondo
+                | PLUS operando  |  MINUS operando np_negar  |  operando</code></pre>
+
+<h2>6. Las pilas paso a paso</h2>
+<p>El programa tiene dos asignaciones con los mismos operandos. En la primera la multiplicación va antes por precedencia; en la segunda el paréntesis obliga a sumar primero.</p>
+<p class="pie-codigo">programas/precedencia.bd</p>
+<pre><code>program precedencia;
+var a, b, c, d : int;
+main {
+    a = b + c * d;
+    a = (b + c) * d;
+}
+end</code></pre>
+<p>La opción <code>--traza</code> muestra el contenido de las tres pilas después de cada acción (el tope está a la derecha) y el cuádruplo que se generó en ese paso:</p>
+<pre><code>$ python main.py programas/precedencia.bd --traza
+programas/precedencia.bd: programa válido
+
+PILAS PASO A PASO
+ACCIÓN              PilaO    PTipos           POper  CUÁDRUPLO
+meter operando a    a        int              -
+meter operador =    a        int              =
+meter operando b    a b      int int          =
+meter operador +    a b      int int          = +
+meter operando c    a b c    int int int      = +
+meter operador *    a b c    int int int      = + *
+meter operando d    a b c d  int int int int  = + *
+resolver *          a b t1   int int int      = +    (*, c, d, t1)
+resolver +          a t2     int int          =      (+, b, t1, t2)
+generar asignación  -        -                -      (=, t2, _, a)
+meter operando a    a        int              -
+meter operador =    a        int              =
+meter fondo falso   a        int              = (
+meter operando b    a b      int int          = (
+meter operador +    a b      int int          = ( +
+meter operando c    a b c    int int int      = ( +
+resolver +          a t3     int int          = (    (+, b, c, t3)
+quitar fondo falso  a t3     int int          =
+meter operador *    a t3     int int          = *
+meter operando d    a t3 d   int int int      = *
+resolver *          a t4     int int          =      (*, t3, d, t4)
+generar asignación  -        -                -      (=, t4, _, a)
+
+FILA DE CUÁDRUPLOS
+  1: (*, c, d, t1)
+  2: (+, b, t1, t2)
+  3: (=, t2, _, a)
+  4: (+, b, c, t3)
+  5: (*, t3, d, t4)
+  6: (=, t4, _, a)</code></pre>
+<p>En la primera asignación, cuando se lee <code>c</code> el tope de POper es <code>+</code>; el punto 4 no lo resuelve porque solo busca <code>*</code> o <code>/</code>. En la segunda, el fondo falso <code>(</code> queda encima de <code>=</code> y el <code>+</code> se resuelve antes de que se lea el <code>*</code>.</p>
+
+<h2>7. Programas de prueba y su fila de cuádruplos</h2>
+<h3>Expresiones y estatutos lineales</h3>
+<p class="pie-codigo">programas/expresiones.bd</p>
+<pre><code>program expresiones;
+var a, b, c, d : int;
+    x, y : float;
+main {
+    a = 2;
+    b = 3;
+    c = 4;
+    d = a + b * c;
+    d = (a + b) * c;
+    d = a - b - c;
+    d = a * b + c / a - b;
+    x = a / 2.0;
+    y = -x * (a + b) - 1.5;
+    print("d vale", d, "y la suma", a + b);
+    print(a * 2 &gt; b + c);
+}
+end</code></pre>
+<pre><code>$ python main.py programas/expresiones.bd
+programas/expresiones.bd: programa válido
+
+FILA DE CUÁDRUPLOS
+  1: (=, 2, _, a)
+  2: (=, 3, _, b)
+  3: (=, 4, _, c)
+  4: (*, b, c, t1)
+  5: (+, a, t1, t2)
+  6: (=, t2, _, d)
+  7: (+, a, b, t3)
+  8: (*, t3, c, t4)
+  9: (=, t4, _, d)
+ 10: (-, a, b, t5)
+ 11: (-, t5, c, t6)
+ 12: (=, t6, _, d)
+ 13: (*, a, b, t7)
+ 14: (/, c, a, t8)
+ 15: (+, t7, t8, t9)
+ 16: (-, t9, b, t10)
+ 17: (=, t10, _, d)
+ 18: (/, a, 2.0, t11)
+ 19: (=, t11, _, x)
+ 20: (neg, x, _, t12)
+ 21: (+, a, b, t13)
+ 22: (*, t12, t13, t14)
+ 23: (-, t14, 1.5, t15)
+ 24: (=, t15, _, y)
+ 25: (print, _, _, "d vale")
+ 26: (print, _, _, d)
+ 27: (print, _, _, "y la suma")
+ 28: (+, a, b, t16)
+ 29: (print, _, _, t16)
+ 30: (*, a, 2, t17)
+ 31: (+, b, c, t18)
+ 32: (&gt;, t17, t18, t19)
+ 33: (print, _, _, t19)</code></pre>
+<ul>
+<li>Cuádruplos 10 y 11: <code>a - b - c</code> se asocia por la izquierda.</li>
+<li>Cuádruplo 18: <code>a / 2.0</code> es <code>int / float</code>; el temporal es <code>float</code> y se puede asignar a <code>x</code>.</li>
+<li>Cuádruplos 20 a 23: el menos unario sobre <code>x</code> genera <code>neg</code>; la constante <code>1.5</code> no necesita temporal.</li>
+<li>Cuádruplos 30 a 32: en <code>a * 2 &gt; b + c</code> primero se resuelven los dos lados y al final la comparación.</li>
+</ul>
+
+<h3>Expresiones largas</h3>
+<p class="pie-codigo">programas/ejemplo_clase.bd</p>
+<pre><code>program ejemplo;
+var A, B, C, D, E, F, G, H, J, K : int;
+main {
+    A = B + C * (D - E / F) * H;
+    G = (A + B) * C - D * E / (F + G);
+    print(J != K * 2);
+}
+end</code></pre>
+<pre><code>$ python main.py programas/ejemplo_clase.bd
+programas/ejemplo_clase.bd: programa válido
+
+FILA DE CUÁDRUPLOS
+  1: (/, E, F, t1)
+  2: (-, D, t1, t2)
+  3: (*, C, t2, t3)
+  4: (*, t3, H, t4)
+  5: (+, B, t4, t5)
+  6: (=, t5, _, A)
+  7: (+, A, B, t6)
+  8: (*, t6, C, t7)
+  9: (*, D, E, t8)
+ 10: (+, F, G, t9)
+ 11: (/, t8, t9, t10)
+ 12: (-, t7, t10, t11)
+ 13: (=, t11, _, G)
+ 14: (*, K, 2, t12)
+ 15: (!=, J, t12, t13)
+ 16: (print, _, _, t13)</code></pre>
+
+<h3>Programa con funciones, ciclo y condición</h3>
+<p>Es el mismo <code>factorial.bd</code> de la entrega 1. Los cuádruplos salen en el orden del archivo: primero el cuerpo de las funciones y después <code>main</code>. Todavía no hay saltos, así que la condición del <code>while</code> (cuádruplos 3 y 4) y la del <code>if</code> (cuádruplo 11) se calculan pero nadie las usa aún.</p>
+<pre><code>$ python main.py programas/factorial.bd --tablas
+programas/factorial.bd: programa válido
+
+DIRECTORIO DE FUNCIONES Y TABLAS DE VARIABLES
+[global] programa 'factorial'
+    n            int    variable
+    resultado    int    variable
+[función] void calcula(int)
+    limite       int    parámetro
+    i            int    variable
+[función] void saluda(sin parámetros)
+    (sin variables)
+
+FILA DE CUÁDRUPLOS
+  1: (=, 1, _, i)
+  2: (=, 1, _, resultado)
+  3: (+, limite, 1, t1)
+  4: (&lt;, i, t1, t2)
+  5: (*, resultado, i, t3)
+  6: (=, t3, _, resultado)
+  7: (+, i, 1, t4)
+  8: (=, t4, _, i)
+  9: (print, _, _, "Factorial en BabyDuck")
+ 10: (=, 5, _, n)
+ 11: (&gt;, resultado, 100, t5)
+ 12: (print, _, _, "grande")
+ 13: (print, _, _, resultado)
+ 14: (print, _, _, "chico")
+ 15: (print, _, _, resultado)
+ 16: (!=, n, 0, t6)
+ 17: (print, _, _, "n no es cero")</code></pre>
+
+<h2>8. Errores de tipos</h2>
+<p>La verificación de tipos ocurre mientras se generan los cuádruplos, usando la pila de tipos y el cubo semántico de la entrega 2.</p>
+<div class="tabla"><table>
+<thead><tr><th>Error</th><th>Punto</th><th>Programa de prueba</th></tr></thead>
+<tbody>
+<tr><td>Asignar un <code>float</code> a una variable <code>int</code></td><td><span class="pt">12</span></td><td><code>error_tipos_asignacion.bd</code></td></tr>
+<tr><td>Operar con el resultado de una comparación</td><td><span class="pt">4</span> <span class="pt">5</span> <span class="pt">6</span></td><td><code>error_tipos_bool.bd</code></td></tr>
+<tr><td>Condición de <code>if</code> o <code>while</code> que no es una comparación</td><td><span class="pt">15</span></td><td><code>error_condicion_no_bool.bd</code></td></tr>
+</tbody></table></div>
+<pre><code>programas/error_tipos_asignacion.bd: Error semántico (línea 6): no se puede asignar un valor float a 'a', que es int
+programas/error_tipos_bool.bd: Error semántico (línea 4): tipos incompatibles: bool + int
+programas/error_condicion_no_bool.bd: Error semántico (línea 4): la condición del if debe ser una comparación (se recibió int)</code></pre>
+
+<h2>9. Pruebas</h2>
+<p><code>test_entrega3.py</code> compara los cuádruplos generados contra los esperados para cada caso: precedencia, asociatividad, paréntesis anidados, signo unario, relacionales, <code>print</code>, tipos de los temporales y errores de tipos. También verifica que las tres pilas queden vacías al terminar cada programa. Las pruebas de las entregas 1 y 2 se siguen corriendo.</p>
+<pre><code>$ python -m unittest
+.................................................................................
+----------------------------------------------------------------------
+Ran 81 tests in 0.026s
+
+OK</code></pre>
+
+<h2>10. Archivos</h2>
+<div class="tabla"><table>
+<thead><tr><th>Archivo</th><th>Contenido</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td><code>estructuras.py</code></td><td>Clases <code>Pila</code> y <code>Fila</code>.</td><td>Nuevo</td></tr>
+<tr><td><code>cuadruplos.py</code></td><td>Clase <code>Cuadruplo</code> y el generador con las tres pilas y la fila.</td><td>Nuevo</td></tr>
+<tr><td><code>parser.py</code></td><td>Gramática con los puntos semánticos (S1–S8) y los 16 puntos de generación de código.</td><td>Modificado</td></tr>
+<tr><td><code>main.py</code></td><td>Muestra la fila de cuádruplos; <code>--traza</code> y <code>--tablas</code> muestran más detalle.</td><td>Modificado</td></tr>
+<tr><td><code>cubo_semantico.py</code>, <code>directorio.py</code>, <code>lexer.py</code>, <code>errores.py</code></td><td>Entregas anteriores.</td><td>Sin cambios</td></tr>
+<tr><td><code>test_entrega3.py</code></td><td>Pruebas de esta entrega.</td><td>Nuevo</td></tr>
+</tbody></table></div>
+<pre><code>cd BabyDuck/Entrega3
+../.venv/bin/python main.py programas/expresiones.bd
+../.venv/bin/python main.py programas/precedencia.bd --traza
+../.venv/bin/python -m unittest -v</code></pre>
+
+<h2>11. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Consultas de apoyo</th><td>En una conversación previa se le pidió a la IA que explicara la lógica del proyecto: cómo funciona la gramática de BabyDuck, cómo funciona el léxico (tokens y expresiones regulares) y, sobre todo, cómo se generan los cuádruplos para esta entrega (uso de las pilas de operandos, tipos y operadores, y en qué momento se genera cada cuádruplo).</td></tr>
+<tr><th>Prompt de implementación (resumen)</th><td>"Vamos atrasados con las actividades de compiladores. Quiero hacerlo en Python, empezando desde cero. Crea una carpeta por entrega con su código bien documentado y un documento que explique lo que se hizo." Se adjuntaron las capturas de las instrucciones de Canvas de las entregas 0 a 3.</td></tr>
+<tr><th>Qué generó</th><td><code>estructuras.py</code>, <code>cuadruplos.py</code>, los puntos neurálgicos de generación de código en <code>parser.py</code>, los programas de prueba, <code>test_entrega3.py</code>, los diagramas con puntos y este documento.</td></tr>
+<tr><th>Decisiones que conviene confirmar</th><td>El menos unario se traduce con un operador <code>neg</code> (o cambiando el signo de la constante). Los temporales se numeran de corrido en todo el programa. El alcance se limitó a expresiones y estatutos lineales, como pide la entrega.</td></tr>
+<tr><th>Cómo se verificó</th><td>Pruebas automatizadas que comparan cuádruplo por cuádruplo, y revisión a mano de las expresiones de la sección 7. Las salidas de este documento las produce el código al construir el documento.</td></tr>
+</tbody></table></div>
+
+</main>
+<script>
+/* Dibuja diagramas de sintaxis a partir de una notación tipo EBNF escrita
+   dentro de cada <div class="rr" data-rule="NOMBRE">:
+     'x'            terminal            NOMBRE        no terminal
+     @n             punto neurálgico    ( a | b )     alternativas
+     [ a ]          opcional            { a }         cero o más
+     { a }+         uno o más           { a / s }+    uno o más separados por s */
+(function () {
+  var esc = function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+  var VACIO = { k: "seq", s: [] };
+
+  function parse(src) {
+    var t = src.match(/'[^']*'|@\w+|[\[\]{}()|\/+]|[^\s'@\[\]{}()|\/+]+/g) || [], i = 0;
+    function alt() {
+      var a = [seq()];
+      while (t[i] === "|") { i++; a.push(seq()); }
+      return a.length > 1 ? { k: "alt", a: a } : a[0];
+    }
+    function seq() {
+      var s = [];
+      while (i < t.length && !/^[\]})|\/]$/.test(t[i])) s.push(item());
+      return s.length === 1 ? s[0] : { k: "seq", s: s };
+    }
+    function item() {
+      var x = t[i++], a, r, sep = null;
+      if (x === "[") { a = alt(); i++; return { k: "alt", a: [a, VACIO] }; }
+      if (x === "(") { a = alt(); i++; return a; }
+      if (x === "{") {
+        a = alt();
+        if (t[i] === "/") { i++; sep = alt(); }
+        i++;
+        r = { k: "rep", a: a, sep: sep };
+        if (t[i] === "+") { i++; return r; }
+        return { k: "alt", a: [r, VACIO] };
+      }
+      if (x[0] === "'") return { k: "t", v: x.slice(1, -1) };
+      if (x[0] === "@") return { k: "p", v: x.slice(1) };
+      return { k: "n", v: x };
+    }
+    return alt();
+  }
+
+  var LN = '<i class="rr-ln"></i>', FILL = '<i class="rr-ln rr-fill"></i>';
+  function fila(n, clase) {
+    var dentro = n.k === "seq" && !n.s.length ? "" : LN + dibuja(n);
+    return '<span class="rr-row' + (clase || "") + '">' + dentro + FILL + "</span>";
+  }
+  function dibuja(n) {
+    if (n.k === "t") return '<span class="rr-t">' + esc(n.v) + "</span>";
+    if (n.k === "n") return '<span class="rr-n">' + esc(n.v) + "</span>";
+    if (n.k === "p") return '<span class="rr-p' + (/^S/.test(n.v) ? " rr-ps" : "") + '" title="punto neurálgico ' + esc(n.v) + '">' + esc(n.v) + "</span>";
+    if (n.k === "seq") return '<span class="rr-seq">' + n.s.map(dibuja).join(LN) + "</span>";
+    if (n.k === "alt") return '<span class="rr-alt">' + n.a.map(function (a) { return fila(a); }).join("") + "</span>";
+    var regreso = '<span class="rr-row rr-back">' + LN + '<span class="rr-loop" title="se repite">↺</span>' + (n.sep ? LN + dibuja(n.sep) : "") + FILL + "</span>";
+    return '<span class="rr-alt">' + fila(n.a) + regreso + "</span>";
+  }
+
+  document.querySelectorAll(".rr").forEach(function (el) {
+    var arbol = parse(el.textContent);
+    el.innerHTML = '<span class="rr-name">' + esc(el.dataset.rule) + '</span><span class="rr-body"><span class="rr-dot"></span>' +
+      LN + dibuja(arbol) + LN + '<span class="rr-dot"></span></span>';
+  });
+})();
+</script>

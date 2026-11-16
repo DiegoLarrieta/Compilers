@@ -1,0 +1,133 @@
+<h2>1. Herramientas investigadas</h2>
+<p>En la tarea previa se probaron generadores para C y Go (flex/bison, goyacc y ANTLR). Para el proyecto se cambió a Python, así que se compararon las opciones disponibles para ese lenguaje.</p>
+<div class="tabla"><table>
+<thead><tr><th>Herramienta</th><th>Algoritmo</th><th>Cómo se escriben las reglas</th><th>A favor</th><th>En contra</th></tr></thead>
+<tbody>
+<tr><td><strong>PLY</strong><br>(Python Lex-Yacc)</td><td>LALR(1)</td><td>En el mismo archivo Python: expresiones regulares en variables <code>t_*</code> y reglas BNF en el docstring de funciones <code>p_*</code>.</td><td>Mismo modelo que lex/yacc y bison de la tarea previa. No hay paso de generación de código. Las acciones van pegadas a la regla, lo que sirve para los puntos neurálgicos.</td><td>Ya no recibe versiones nuevas (la última es la 3.11). BNF puro: lo opcional y las repeticiones se escriben con reglas auxiliares.</td></tr>
+<tr><td><strong>Lark</strong></td><td>Earley o LALR(1)</td><td>Gramática EBNF en un texto aparte; construye el árbol de sintaxis solo.</td><td>Gramática muy compacta (<code>?</code>, <code>*</code>, <code>+</code>). Mantenimiento activo.</td><td>Las acciones se ejecutan después, recorriendo el árbol. Poner una acción a la mitad de una regla no es natural.</td></tr>
+<tr><td><strong>ANTLR 4</strong><br>(destino Python)</td><td>ALL(*) (descendente)</td><td>Archivo <code>.g4</code> en EBNF; genera las clases del lexer y del parser.</td><td>Muy documentado, buenas herramientas para ver árboles. Ya se usó en la tarea previa.</td><td>Necesita Java para generar el código. Agrega archivos generados al proyecto. Las acciones dentro de la gramática la amarran a un lenguaje.</td></tr>
+<tr><td><strong>SLY</strong></td><td>LALR(1)</td><td>Clases <code>Lexer</code> y <code>Parser</code> con decoradores.</td><td>Sintaxis más moderna que PLY, del mismo autor.</td><td>Menos ejemplos y documentación. Tampoco recibe versiones nuevas.</td></tr>
+</tbody></table></div>
+
+<h3>Herramienta seleccionada: PLY</h3>
+<ul>
+<li><strong>Conecta con Python sin pasos extra.</strong> El scanner y el parser son módulos normales de Python; se corren y se depuran igual que el resto del código.</li>
+<li><strong>Las entregas siguientes piden puntos neurálgicos.</strong> PLY permite ejecutar código al terminar una regla o a la mitad de ella. Con Lark o con los visitors de ANTLR habría que recorrer un árbol después.</li>
+<li><strong>Es el mismo modelo de la tarea previa.</strong> Lo aprendido con flex/bison (tokens, reglas BNF, conflictos shift/reduce) aplica directo.</li>
+<li><strong>Buena documentación.</strong> El manual oficial cubre lex y yacc con ejemplos completos.</li>
+</ul>
+<p>El costo que se acepta: la gramática se escribe en BNF puro, y la versión queda fija en <code>ply==3.11</code> (ver <code>requirements.txt</code>).</p>
+
+<h2>2. Cómo se dieron de alta las reglas</h2>
+<h3>Scanner: <code>lexer.py</code></h3>
+<p>PLY lee tres cosas del módulo: la lista <code>tokens</code>, las variables <code>t_NOMBRE</code> (expresión regular de un token simple) y las funciones <code>t_NOMBRE</code> (expresión regular en el docstring más una acción).</p>
+<pre><code>tokens = ["ID", "CTE_INT", "CTE_FLOAT", "CTE_STRING", "PLUS", ...] + list(palabras_reservadas.values())
+
+t_PLUS = r"\+"          # token simple: solo su expresión regular
+t_NE   = r"!="
+
+def t_CTE_FLOAT(t):     # token con acción: convierte el lexema a número
+    r"\d+\.\d+"
+    t.value = float(t.value)
+    return t
+
+def t_ID(t):
+    r"[A-Za-z_][A-Za-z0-9_]*"
+    t.type = palabras_reservadas.get(t.value, "ID")   # ¿es palabra reservada?
+    return t</code></pre>
+<ul>
+<li>Las funciones se prueban en el orden en que están escritas. Por eso <code>t_CTE_FLOAT</code> va antes que <code>t_CTE_INT</code>: si no, <code>3.14</code> se leería como el entero <code>3</code>.</li>
+<li>Las palabras reservadas no tienen regla propia. Se reconocen como <code>ID</code> y se reclasifican con un diccionario.</li>
+<li><code>t_error</code> lanza <code>ErrorLexico</code> con el carácter y la línea.</li>
+</ul>
+
+<h3>Parser: <code>parser.py</code></h3>
+<p>Cada función <code>p_*</code> lleva en su docstring una o varias reglas en BNF. PLY las junta y construye la tabla LALR(1) al importar el módulo.</p>
+<pre><code>def p_condicion(p):
+    """condicion : IF LPAREN expresion RPAREN body else_opt SEMICOLON
+    else_opt  : ELSE body
+              | empty"""
+
+def p_empty(p):
+    """empty :"""
+
+def p_error(tok):
+    raise ErrorSintactico(f"no se esperaba '{tok.value}' (token {tok.type})", tok.lineno)</code></pre>
+<p>En esta entrega las funciones no tienen cuerpo porque el parser solo valida. En las entregas 2 y 3 ese cuerpo es donde van las acciones semánticas.</p>
+
+<h3>Gramática registrada</h3>
+<p>Esta es la gramática completa tal como PLY la tiene registrada (se obtiene del parser ya construido, no se copió a mano). Tiene 0 conflictos shift/reduce y 0 conflictos reduce/reduce.</p>
+<pre><code>{{gramatica:Entrega1}}</code></pre>
+
+<h2>3. Plan de pruebas</h2>
+<p>Las pruebas están en <code>test_entrega1.py</code> y usan <code>unittest</code>, que viene con Python. Hay dos tipos: programas completos en la carpeta <code>programas/</code> y casos pequeños escritos dentro del archivo de pruebas.</p>
+<div class="tabla"><table>
+<thead><tr><th>Qué se prueba</th><th>Casos principales</th><th>Resultado esperado</th></tr></thead>
+<tbody>
+<tr><td rowspan="5">Scanner</td><td>Las 12 palabras reservadas</td><td>Un token distinto por palabra</td></tr>
+<tr><td><code>iffy</code>, <code>printer</code>, <code>main2</code>, <code>Program</code></td><td>Son <code>ID</code>, no palabras reservadas</td></tr>
+<tr><td><code>42</code>, <code>3.14</code>, <code>"hola mundo"</code>, <code>10.5</code></td><td>Tipo y valor correctos; el flotante no se parte</td></tr>
+<tr><td><code>a=b+1;</code> sin espacios; texto en varias líneas</td><td>Tokens correctos y número de línea correcto</td></tr>
+<tr><td><code>$</code>, <code>!</code> solo, string sin cerrar</td><td class="err">Error léxico</td></tr>
+<tr><td rowspan="4">Parser, programas válidos</td><td>Programa mínimo: <code>program p; main { } end</code></td><td class="ok">Aceptado</td></tr>
+<tr><td>Expresiones: precedencia, paréntesis anidados, signo unario, relacionales</td><td class="ok">Aceptado</td></tr>
+<tr><td><code>print</code> con varios elementos, <code>if</code>, <code>if/else</code>, <code>while</code>, anidados</td><td class="ok">Aceptado</td></tr>
+<tr><td>Funciones con y sin parámetros, con variables locales, y sus llamadas</td><td class="ok">Aceptado</td></tr>
+<tr><td rowspan="3">Parser, programas inválidos</td><td>Estructura: archivo vacío, falta <code>program</code>, <code>main</code>, <code>end</code> o <code>;</code>; <code>var</code> sin declaraciones; tipo inexistente</td><td class="err">Error de sintaxis</td></tr>
+<tr><td>Estatutos: falta <code>;</code>, paréntesis sin cerrar, dos operadores seguidos, dos relacionales, <code>print()</code> vacío, <code>while</code> sin <code>do</code></td><td class="err">Error de sintaxis</td></tr>
+<tr><td>Funciones: sin corchetes, sin <code>;</code> final, parámetro sin tipo, tipo de retorno distinto de <code>void</code></td><td class="err">Error de sintaxis</td></tr>
+</tbody></table></div>
+
+<h3>Resultado de las pruebas</h3>
+<pre><code>$ python -m unittest
+{{cmd:Entrega1|-m unittest}}</code></pre>
+
+<h3>Programa válido</h3>
+<p class="pie-codigo">programas/factorial.bd</p>
+<pre><code>{{archivo:Entrega1/programas/factorial.bd}}</code></pre>
+<pre><code>$ python main.py programas/factorial.bd
+{{cmd:Entrega1|main.py programas/factorial.bd}}</code></pre>
+
+<h3>Tokens de un programa</h3>
+<pre><code>$ python main.py programas/minimo.bd --tokens
+{{cmd:Entrega1|main.py programas/minimo.bd --tokens}}</code></pre>
+
+<h3>Programas con error</h3>
+<p>Cada mensaje dice la fase que detectó el error, la línea y qué se encontró.</p>
+<pre><code>$ python main.py programas/error_lexico.bd
+{{cmd:Entrega1|main.py programas/error_lexico.bd}}
+
+$ python main.py programas/error_sintaxis.bd
+{{cmd:Entrega1|main.py programas/error_sintaxis.bd}}
+
+$ python main.py programas/error_falta_punto_y_coma.bd
+{{cmd:Entrega1|main.py programas/error_falta_punto_y_coma.bd}}</code></pre>
+<p>En el último caso el <code>;</code> falta en la línea 4, pero el error se reporta en la línea 5: el parser se da cuenta hasta que lee el siguiente token (<code>print</code>).</p>
+
+<h2>4. Archivos y cómo correrlo</h2>
+<div class="tabla"><table>
+<thead><tr><th>Archivo</th><th>Contenido</th></tr></thead>
+<tbody>
+<tr><td><code>lexer.py</code></td><td>Scanner: tokens y expresiones regulares.</td></tr>
+<tr><td><code>parser.py</code></td><td>Parser: gramática BNF y manejo de errores de sintaxis.</td></tr>
+<tr><td><code>errores.py</code></td><td>Excepciones <code>ErrorLexico</code> y <code>ErrorSintactico</code>.</td></tr>
+<tr><td><code>main.py</code></td><td>Compila un archivo <code>.bd</code> desde la terminal.</td></tr>
+<tr><td><code>test_entrega1.py</code></td><td>Plan de pruebas automatizado.</td></tr>
+<tr><td><code>programas/</code></td><td>Programas BabyDuck de prueba. Los que empiezan con <code>error_</code> deben fallar.</td></tr>
+</tbody></table></div>
+<pre><code>cd BabyDuck
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+cd Entrega1
+../.venv/bin/python main.py programas/factorial.bd
+../.venv/bin/python -m unittest -v</code></pre>
+
+<h2>5. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Qué se le pidió</th><td>Reconstruir las entregas 0 a 3 del proyecto en Python, una carpeta por entrega, con el código documentado y un documento por entrega, a partir de las capturas de las instrucciones de Canvas.</td></tr>
+<tr><th>Qué generó</th><td>La comparación de herramientas, <code>lexer.py</code>, <code>parser.py</code>, los programas de prueba, <code>test_entrega1.py</code> y este documento.</td></tr>
+<tr><th>Cómo se verificó</th><td>Se corrieron las pruebas automatizadas y los programas de ejemplo. Las salidas que aparecen en este documento son las que produce el código al construir el documento, no están escritas a mano. Se revisó que PLY reporte 0 conflictos en la gramática.</td></tr>
+</tbody></table></div>

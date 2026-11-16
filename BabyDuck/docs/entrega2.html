@@ -1,0 +1,172 @@
+<h2>1. Cubo semántico</h2>
+<p>El cubo semántico responde una pregunta: si se aplica un operador a un operando de un tipo y otro de otro tipo, ¿de qué tipo es el resultado, o es un error? BabyDuck tiene dos tipos declarables (<code>int</code> y <code>float</code>) y un tercero, <code>bool</code>, que solo existe como resultado de una comparación.</p>
+<div class="tabla"><table>
+<thead><tr><th>Izquierdo</th><th>Derecho</th><th><code>+</code> <code>-</code> <code>*</code> <code>/</code></th><th><code>&gt;</code> <code>&lt;</code> <code>!=</code></th><th><code>=</code> (destino = valor)</th></tr></thead>
+<tbody>
+<tr><td>int</td><td>int</td><td>int</td><td>bool</td><td>int</td></tr>
+<tr><td>int</td><td>float</td><td>float</td><td>bool</td><td class="err">error</td></tr>
+<tr><td>float</td><td>int</td><td>float</td><td>bool</td><td>float</td></tr>
+<tr><td>float</td><td>float</td><td>float</td><td>bool</td><td>float</td></tr>
+<tr><td>bool</td><td>cualquiera</td><td class="err">error</td><td class="err">error</td><td class="err">error</td></tr>
+<tr><td>cualquiera</td><td>bool</td><td class="err">error</td><td class="err">error</td><td class="err">error</td></tr>
+</tbody></table></div>
+<h3>Decisiones de diseño</h3>
+<ul>
+<li><strong>Si participa un <code>float</code>, el resultado es <code>float</code>.</strong> Es la promoción usual: no se pierde información.</li>
+<li><strong><code>int / int</code> da <code>int</code></strong> (división entera, como en C). Para obtener decimales basta que un operando sea flotante: <code>total / 2.0</code>.</li>
+<li><strong>Las comparaciones dan <code>bool</code></strong> y un <code>bool</code> no se puede volver a operar ni asignar. No hay variables <code>bool</code>; el tipo existe para validar la condición de <code>if</code> y <code>while</code>.</li>
+<li><strong>Asignación:</strong> a una variable <code>float</code> se le puede asignar un <code>int</code>. A una variable <code>int</code> no se le puede asignar un <code>float</code>, porque se perdería la parte decimal sin avisar.</li>
+</ul>
+<h3>Implementación: <code>cubo_semantico.py</code></h3>
+<p>El cubo es un diccionario de tres niveles: <code>CUBO[operador][tipo_izquierdo][tipo_derecho]</code>. Se eligió así porque la consulta es directa (tres búsquedas en tablas hash, costo constante) y porque el código se lee igual que la tabla de arriba. Las combinaciones inválidas se guardan explícitamente como <code>"error"</code>, así que ninguna consulta falla por llave inexistente.</p>
+<pre><code>tipo_resultante("+", "int", "float")   # -&gt; "float"
+tipo_resultante("&gt;", "int", "int")     # -&gt; "bool"
+tipo_resultante("=", "int", "float")   # -&gt; "error"</code></pre>
+<p>El cubo completo, impreso por el programa (9 combinaciones de tipos por 8 operadores):</p>
+<pre><code>$ python main.py --cubo
+{{cmd:Entrega2|main.py --cubo}}</code></pre>
+<p>En esta entrega el cubo queda diseñado, implementado y probado. Se empieza a consultar en la entrega 3, cuando se generan los cuádruplos de las expresiones.</p>
+
+<h2>2. Directorio de funciones y tablas de variables</h2>
+<p>El compilador necesita recordar qué funciones y variables existen, de qué tipo son y en qué alcance viven. Eso se guarda en dos niveles: un directorio de funciones, y dentro de cada función su tabla de variables.</p>
+<div class="esquema">
+<div><h4>DirectorioFunciones</h4><dl>
+<dt>funciones</dt><dd>dict: nombre → Funcion</dd>
+<dt>nombre_programa</dt><dd>llave del alcance global</dd>
+<dt>alcance_actual</dt><dd>función que se está compilando</dd>
+</dl></div>
+<div><h4>Funcion</h4><dl>
+<dt>nombre</dt><dd>identificador</dd>
+<dt>tipo</dt><dd>"programa" o "void"</dd>
+<dt>parametros</dt><dd>list de tipos, en orden</dd>
+<dt>variables</dt><dd>TablaVariables</dd>
+</dl></div>
+<div><h4>TablaVariables</h4><dl>
+<dt>variables</dt><dd>dict: nombre → Variable</dd>
+</dl></div>
+<div><h4>Variable</h4><dl>
+<dt>nombre</dt><dd>identificador</dd>
+<dt>tipo</dt><dd>"int" o "float"</dd>
+<dt>es_parametro</dt><dd>True / False</dd>
+</dl></div>
+</div>
+
+<h3>Qué estructura se eligió y por qué</h3>
+<div class="tabla"><table>
+<thead><tr><th>Situación</th><th>Estructura</th><th>Por qué</th></tr></thead>
+<tbody>
+<tr><td>Directorio de funciones</td><td>Tabla hash (<code>dict</code>)<br>nombre → Funcion</td><td>La operación más frecuente es buscar por nombre: "¿ya existe esta función?", "¿existe la función que se quiere llamar?". En un <code>dict</code> cuesta O(1) en promedio; en una lista costaría O(n). Los nombres son únicos, igual que las llaves.</td></tr>
+<tr><td>Tabla de variables de un alcance</td><td>Tabla hash (<code>dict</code>)<br>nombre → Variable</td><td>Mismo motivo: cada uso de una variable en el programa es una búsqueda por nombre. Además, detectar una variable doblemente declarada es solo preguntar si la llave ya existe.</td></tr>
+<tr><td>Parámetros de una función</td><td>Lista (<code>list</code>) de tipos</td><td>Aquí el orden sí importa: el primer argumento de la llamada corresponde al primer parámetro. Una lista conserva la posición y se recorre en orden.</td></tr>
+<tr><td>Alcance global</td><td>Una entrada más del directorio, con el nombre del programa</td><td>Así las variables globales y las locales se manejan con el mismo código. Solo cambia a qué entrada apunta <code>alcance_actual</code>.</td></tr>
+<tr><td>Una tabla por función (no una sola tabla para todo)</td><td>Tablas separadas</td><td>Dos funciones pueden tener variables con el mismo nombre sin chocar, y una local puede tapar a una global.</td></tr>
+</tbody></table></div>
+
+<h3>Operaciones principales</h3>
+<div class="tabla"><table>
+<thead><tr><th>Operación</th><th>Qué hace</th><th>Cuándo se usa</th><th>Costo</th></tr></thead>
+<tbody>
+<tr><td><code>crear_programa(nombre)</code></td><td>Inserta el alcance global y lo vuelve el alcance actual.</td><td>Al leer <code>program id</code></td><td>O(1)</td></tr>
+<tr><td><code>crear_funcion(nombre)</code></td><td>Valida que no exista, inserta la función con su tabla vacía y cambia el alcance actual.</td><td>Al leer <code>void id</code></td><td>O(1)</td></tr>
+<tr><td><code>agregar_variable(nombre, tipo)</code></td><td>Valida que no esté repetida en el alcance actual y la inserta. Si es parámetro, también agrega su tipo a la firma.</td><td>En cada declaración y en cada parámetro</td><td>O(1)</td></tr>
+<tr><td><code>buscar_variable(nombre)</code></td><td>Busca en el alcance actual y, si no está, en el global. Si no está en ninguno, error.</td><td>Cada vez que se usa una variable</td><td>O(1)</td></tr>
+<tr><td><code>buscar_funcion(nombre)</code></td><td>Regresa la función o marca error si no existe.</td><td>En cada llamada</td><td>O(1)</td></tr>
+<tr><td><code>cerrar_funcion()</code></td><td>Regresa el alcance actual al global.</td><td>Al terminar una función</td><td>O(1)</td></tr>
+</tbody></table></div>
+
+<h2>3. Puntos neurálgicos</h2>
+<p>Un punto neurálgico es un lugar de la gramática donde, además de reconocer la sintaxis, se ejecuta una acción. Aquí las acciones crean y llenan el directorio y las tablas. Los diagramas muestran dónde cae cada punto; solo aparecen los diagramas que tienen alguno.</p>
+<p class="leyenda"><span><span class="pt">1</span> punto neurálgico</span><span><span class="rr-t">id</span> terminal</span><span><span class="rr-n">BODY</span> no terminal</span></p>
+<div class="diagramas">
+<div class="rr" data-rule="PROGRAMA">'program' 'id' @1 ';' [ VARS ] { FUNCS } 'main' BODY 'end'</div>
+<div class="rr" data-rule="VARS">'var' { { 'id' / ',' }+ ':' TYPE ';' @2 }+</div>
+<div class="rr" data-rule="FUNCS">'void' 'id' @3 '(' [ { 'id' ':' TYPE @4 / ',' }+ ] ')' '[' [ VARS ] BODY ']' @5 ';'</div>
+<div class="rr" data-rule="ASSIGN">'id' @6 '=' EXPRESIÓN ';'</div>
+<div class="rr" data-rule="FACTOR">( '(' EXPRESIÓN ')' | [ ( '+' | '-' ) ] ( 'id' @7 | CTE ) )</div>
+<div class="rr" data-rule="F_CALL">'id' @8 '(' [ { EXPRESIÓN / ',' }+ ] ')' ';'</div>
+</div>
+<div class="tabla"><table>
+<thead><tr><th>Punto</th><th>Acción</th><th>Validación</th><th>En <code>parser.py</code></th></tr></thead>
+<tbody>
+<tr><td><span class="pt">1</span></td><td>Crea el directorio de funciones y registra el alcance global con el nombre del programa.</td><td></td><td><code>np_crear_programa</code></td></tr>
+<tr><td><span class="pt">2</span></td><td>Ya se conoce el tipo de la declaración: da de alta todos los identificadores de la lista en la tabla del alcance actual.</td><td>Variable doblemente declarada</td><td><code>p_decl</code></td></tr>
+<tr><td><span class="pt">3</span></td><td>Da de alta la función con su tabla de variables vacía y la vuelve el alcance actual.</td><td>Función doblemente declarada; función con el nombre del programa</td><td><code>np_crear_funcion</code></td></tr>
+<tr><td><span class="pt">4</span></td><td>Agrega el parámetro como variable local y anota su tipo en la firma de la función.</td><td>Parámetro repetido</td><td><code>p_param</code></td></tr>
+<tr><td><span class="pt">5</span></td><td>Termina la función: el alcance actual vuelve a ser el global.</td><td></td><td><code>np_cerrar_funcion</code></td></tr>
+<tr><td><span class="pt">6</span></td><td>Busca la variable a la que se va a asignar.</td><td>Variable no declarada</td><td><code>np_verificar_destino</code></td></tr>
+<tr><td><span class="pt">7</span></td><td>Busca la variable usada dentro de una expresión.</td><td>Variable no declarada</td><td><code>p_operando_id</code></td></tr>
+<tr><td><span class="pt">8</span></td><td>Busca la función que se quiere llamar.</td><td>Función no declarada</td><td><code>np_verificar_funcion</code></td></tr>
+</tbody></table></div>
+
+<h3>Cómo se pone un punto neurálgico en PLY</h3>
+<p><strong>Al final de una regla:</strong> es el código de la función de esa regla. PLY lo ejecuta cuando termina de reconocerla. El punto 2 es así:</p>
+<pre><code>def p_decl(p):
+    """decl : lista_ids COLON tipo SEMICOLON"""
+    for nombre, linea in p[1]:                       # p[1] = lista de ids, p[3] = tipo
+        directorio.agregar_variable(nombre, p[3], linea)</code></pre>
+<p><strong>A la mitad de una regla:</strong> se inserta un no terminal vacío (todos se llaman <code>np_*</code>). Como no consume tokens, PLY ejecuta su función justo en ese lugar. Dentro de ella, <code>p[-1]</code> es el símbolo anterior. El punto 3 es así:</p>
+<pre><code>def p_func(p):
+    """func : VOID ID np_crear_funcion LPAREN params_opt RPAREN LBRACKET vars_opt body RBRACKET np_cerrar_funcion SEMICOLON"""
+
+def p_np_crear_funcion(p):
+    """np_crear_funcion :"""
+    directorio.crear_funcion(p[-1], linea_del_anterior(p))    # p[-1] = el ID de la función</code></pre>
+<p>El punto 3 tiene que ir a la mitad: la función debe existir en el directorio antes de leer sus parámetros y variables, porque esos van a su tabla.</p>
+
+<h2>4. Validaciones</h2>
+<div class="tabla"><table>
+<thead><tr><th>Error</th><th>Punto</th><th>Programa de prueba</th></tr></thead>
+<tbody>
+<tr><td>Variable doblemente declarada en el mismo alcance</td><td><span class="pt">2</span></td><td><code>error_variable_duplicada.bd</code></td></tr>
+<tr><td>Parámetro repetido, o variable local con el nombre de un parámetro</td><td><span class="pt">2</span> <span class="pt">4</span></td><td><code>error_parametro_duplicado.bd</code></td></tr>
+<tr><td>Función doblemente declarada</td><td><span class="pt">3</span></td><td><code>error_funcion_duplicada.bd</code></td></tr>
+<tr><td>Uso de una variable no declarada</td><td><span class="pt">6</span> <span class="pt">7</span></td><td><code>error_variable_no_declarada.bd</code></td></tr>
+<tr><td>Llamada a una función no declarada</td><td><span class="pt">8</span></td><td><code>error_funcion_no_declarada.bd</code></td></tr>
+</tbody></table></div>
+<pre><code>{{cmd:Entrega2|main.py programas/error_variable_duplicada.bd}}
+{{cmd:Entrega2|main.py programas/error_parametro_duplicado.bd}}
+{{cmd:Entrega2|main.py programas/error_funcion_duplicada.bd}}
+{{cmd:Entrega2|main.py programas/error_variable_no_declarada.bd}}
+{{cmd:Entrega2|main.py programas/error_funcion_no_declarada.bd}}</code></pre>
+<p>Casos que sí se permiten, y que también están probados:</p>
+<ul>
+<li>Una variable local con el mismo nombre que una global. Dentro de la función, la local tapa a la global.</li>
+<li>Dos funciones distintas con variables o parámetros del mismo nombre.</li>
+<li>Una función que se llama a sí misma (ya está en el directorio cuando se compila su cuerpo).</li>
+</ul>
+<p>Una función solo puede llamar a funciones declaradas antes que ella, porque el directorio se llena en una sola pasada.</p>
+
+<h2>5. Ejemplo completo</h2>
+<p>Este programa tiene una variable global <code>total</code> de tipo <code>int</code> y una local <code>total</code> de tipo <code>float</code> dentro de <code>acumula</code>.</p>
+<p class="pie-codigo">programas/alcances.bd</p>
+<pre><code>{{archivo:Entrega2/programas/alcances.bd}}</code></pre>
+<pre><code>$ python main.py programas/alcances.bd
+{{cmd:Entrega2|main.py programas/alcances.bd}}</code></pre>
+
+<h2>6. Pruebas</h2>
+<p><code>test_entrega2.py</code> prueba tres cosas por separado: el cubo (todas sus combinaciones), la estructura del directorio sin pasar por el parser, y las validaciones compilando programas. <code>test_entrega1.py</code> se conserva para confirmar que la sintaxis sigue funcionando igual.</p>
+<pre><code>$ python -m unittest
+{{cmd:Entrega2|-m unittest}}</code></pre>
+
+<h2>7. Archivos</h2>
+<div class="tabla"><table>
+<thead><tr><th>Archivo</th><th>Contenido</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td><code>cubo_semantico.py</code></td><td>Tabla de consideraciones semánticas.</td><td>Nuevo</td></tr>
+<tr><td><code>directorio.py</code></td><td>Directorio de funciones y tablas de variables.</td><td>Nuevo</td></tr>
+<tr><td><code>parser.py</code></td><td>La gramática de la entrega 1 con los 8 puntos neurálgicos.</td><td>Modificado</td></tr>
+<tr><td><code>errores.py</code></td><td>Se agregó <code>ErrorSemantico</code>.</td><td>Modificado</td></tr>
+<tr><td><code>main.py</code></td><td>Muestra el directorio (<code>--cubo</code> muestra el cubo).</td><td>Modificado</td></tr>
+<tr><td><code>lexer.py</code></td><td>Scanner.</td><td>Sin cambios</td></tr>
+<tr><td><code>test_entrega2.py</code></td><td>Pruebas de esta entrega.</td><td>Nuevo</td></tr>
+</tbody></table></div>
+
+<h2>8. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Qué se le pidió</th><td>Reconstruir las entregas 0 a 3 del proyecto en Python, una carpeta por entrega, con el código documentado y un documento por entrega, a partir de las capturas de las instrucciones de Canvas.</td></tr>
+<tr><th>Qué generó</th><td>El diseño del cubo, <code>cubo_semantico.py</code>, <code>directorio.py</code>, los puntos neurálgicos en <code>parser.py</code>, los programas de prueba, <code>test_entrega2.py</code> y este documento.</td></tr>
+<tr><th>Decisiones que conviene confirmar</th><td>Que <code>int / int</code> dé <code>int</code> y que no se permita asignar <code>float</code> a <code>int</code> son decisiones de diseño tomadas por la IA. Si en clase se definió otra cosa, se cambia una celda en <code>cubo_semantico.py</code>.</td></tr>
+<tr><th>Cómo se verificó</th><td>Pruebas automatizadas y programas de ejemplo. Las salidas de este documento las produce el código al construir el documento.</td></tr>
+</tbody></table></div>

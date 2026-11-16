@@ -1,0 +1,192 @@
+<h2>1. Avance real de esta entrega</h2>
+<div class="tabla"><table>
+<thead><tr><th>Elemento</th><th>Estado</th><th>Detalle</th></tr></thead>
+<tbody>
+<tr><td>Pilas de operandos, tipos y operadores; fila de cuádruplos</td><td class="ok">Completo</td><td><code>estructuras.py</code></td></tr>
+<tr><td>Expresiones aritméticas (<code>+ - * /</code>, paréntesis, signo unario)</td><td class="ok">Completo</td><td>Con precedencia y asociatividad izquierda</td></tr>
+<tr><td>Expresiones relacionales (<code>&gt; &lt; !=</code>)</td><td class="ok">Completo</td><td></td></tr>
+<tr><td>Verificación de tipos con el cubo semántico</td><td class="ok">Completo</td><td>En cada operación y en la asignación</td></tr>
+<tr><td>Estatutos lineales: asignación y <code>print</code></td><td class="ok">Completo</td><td></td></tr>
+<tr><td><code>if</code> y <code>while</code></td><td>Parcial</td><td>Se traducen su condición y su cuerpo, y se valida que la condición sea booleana. Faltan los saltos (<code>GOTOF</code>, <code>GOTO</code>); corresponden a los estatutos no lineales.</td></tr>
+<tr><td>Llamadas a función</td><td>Parcial</td><td>Se traducen las expresiones de los argumentos. Falta el paso de parámetros y el salto a la función.</td></tr>
+</tbody></table></div>
+
+<h2>2. Pilas y fila</h2>
+<div class="tabla"><table>
+<thead><tr><th>Estructura</th><th>Nombre en el código</th><th>Qué guarda</th><th>Por qué esa estructura</th></tr></thead>
+<tbody>
+<tr><td>Pila de operandos (PilaO)</td><td><code>pila_operandos</code></td><td>Nombres de variables, constantes y temporales que esperan a ser operados.</td><td rowspan="3">Una expresión se resuelve de adentro hacia afuera: lo último que se leyó es lo primero que se necesita. Eso es exactamente una pila (LIFO).</td></tr>
+<tr><td>Pila de tipos (PTipos)</td><td><code>pila_tipos</code></td><td>El tipo de cada operando. Va en paralelo a PilaO: se mete y se saca al mismo tiempo.</td></tr>
+<tr><td>Pila de operadores (POper)</td><td><code>pila_operadores</code></td><td>Operadores que todavía no se pueden resolver, y los fondos falsos de los paréntesis.</td></tr>
+<tr><td>Fila de cuádruplos</td><td><code>fila</code></td><td>Los cuádruplos, en el orden en que se generan.</td><td>Se ejecutarán en el mismo orden en que se generaron: el primero que entra es el primero que sale (FIFO).</td></tr>
+</tbody></table></div>
+<h3>Implementación: <code>estructuras.py</code></h3>
+<div class="tabla"><table>
+<thead><tr><th>Clase</th><th>Por dentro</th><th>Operaciones</th><th>Costo</th></tr></thead>
+<tbody>
+<tr><td><code>Pila</code></td><td><code>list</code> de Python; el tope es el final de la lista.</td><td><code>meter</code> (push), <code>sacar</code> (pop), <code>tope</code> (top), <code>esta_vacia</code></td><td>O(1) cada una</td></tr>
+<tr><td><code>Fila</code></td><td><code>collections.deque</code></td><td><code>encolar</code>, <code>desencolar</code>, <code>frente</code>, <code>esta_vacia</code>, recorrido en orden</td><td>O(1) cada una. Con una <code>list</code>, sacar del frente costaría O(n).</td></tr>
+</tbody></table></div>
+<p>Las dos clases exponen solo las operaciones propias de su estructura. El resto del compilador no puede, por ejemplo, sacar un elemento de en medio de una pila.</p>
+
+<h2>3. Formato de los cuádruplos</h2>
+<p>Un cuádruplo es una instrucción con cuatro campos: <code>(operador, operando izquierdo, operando derecho, resultado)</code>. Un campo que no se usa se muestra como <code>_</code>. Los resultados intermedios se guardan en temporales <code>t1</code>, <code>t2</code>, … que genera el compilador.</p>
+<div class="tabla"><table>
+<thead><tr><th>Operador</th><th>Cuádruplo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><code>+ - * /</code></td><td><code>(+, a, b, t1)</code></td><td>t1 = a + b</td></tr>
+<tr><td><code>&gt; &lt; !=</code></td><td><code>(&gt;, a, b, t1)</code></td><td>t1 = a &gt; b (resultado booleano)</td></tr>
+<tr><td><code>neg</code></td><td><code>(neg, a, _, t1)</code></td><td>t1 = -a (menos unario sobre una variable)</td></tr>
+<tr><td><code>=</code></td><td><code>(=, t1, _, a)</code></td><td>a = t1</td></tr>
+<tr><td><code>print</code></td><td><code>(print, _, _, a)</code></td><td>Imprime un valor o un letrero</td></tr>
+</tbody></table></div>
+<p>En esta entrega los operandos son nombres de variables, constantes y temporales. Las direcciones de memoria se asignan en una entrega posterior.</p>
+
+<h2>4. Algoritmo de traducción</h2>
+<p>La idea central: un operador no se puede traducir cuando se lee, porque todavía falta leer su operando derecho. Se guarda en POper y se resuelve después, en el momento en que ya se sabe que sus dos operandos están completos.</p>
+<p><strong>Resolver un operador</strong> (método <code>resolver</code> de <code>cuadruplos.py</code>) significa:</p>
+<ol>
+<li>Sacar el operador de POper.</li>
+<li>Sacar el operando derecho y después el izquierdo de PilaO, con sus tipos de PTipos. El derecho sale primero porque fue el último en entrar.</li>
+<li>Consultar el cubo semántico con el operador y los dos tipos. Si da error, se reporta "tipos incompatibles".</li>
+<li>Pedir un temporal nuevo y generar el cuádruplo <code>(operador, izquierdo, derecho, temporal)</code>.</li>
+<li>Meter el temporal a PilaO y su tipo a PTipos: es el operando de la siguiente operación.</li>
+</ol>
+<p><strong>La precedencia sale de cuándo se intenta resolver:</strong></p>
+<ul>
+<li>Al terminar un <strong>factor</strong> se resuelve el tope de POper solo si es <code>*</code> o <code>/</code>.</li>
+<li>Al terminar un <strong>término</strong> se resuelve el tope solo si es <code>+</code> o <code>-</code>.</li>
+<li>Al terminar la segunda <strong>exp</strong> de una comparación se resuelve el relacional.</li>
+</ul>
+<p>Un <code>+</code> pendiente no se resuelve al terminar un factor, así que espera a que termine toda la multiplicación que le sigue. Como cada operador se resuelve en cuanto su operando derecho está completo, las operaciones del mismo nivel quedan asociadas por la izquierda: <code>a - b - c</code> se traduce como <code>(a - b) - c</code>.</p>
+<p><strong>Paréntesis:</strong> al abrir uno se mete un <em>fondo falso</em> a POper. Como el fondo falso no es <code>+ - * /</code>, tapa los operadores que estaban pendientes afuera y lo de adentro se resuelve primero. Al cerrar el paréntesis se quita.</p>
+
+<h2>5. Diagramas con puntos neurálgicos</h2>
+<p class="leyenda"><span><span class="pt">4</span> punto de generación de código (esta entrega)</span><span><span class="pt s">S7</span> punto semántico de la entrega 2</span></p>
+<div class="diagramas">
+<div class="rr" data-rule="EXPRESIÓN">EXP [ ( '&gt;' | '&lt;' | '!=' ) @3 EXP @6 ]</div>
+<div class="rr" data-rule="EXP">{ TÉRMINO @5 / ( '+' | '-' ) @3 }+</div>
+<div class="rr" data-rule="TÉRMINO">{ FACTOR @4 / ( '*' | '/' ) @3 }+</div>
+<div class="rr" data-rule="FACTOR">( '(' @7 EXPRESIÓN ')' @8 | [ ( '+' | '-' ) ] ( 'id' @S7 @1 | CTE @2 ) @9 )</div>
+<div class="rr" data-rule="ASSIGN">'id' @S6 @10 '=' @11 EXPRESIÓN @12 ';'</div>
+<div class="rr" data-rule="PRINT">'print' '(' { ( EXPRESIÓN @13 | 'cte_string' @14 ) / ',' }+ ')' ';'</div>
+<div class="rr" data-rule="CONDITION">'if' '(' EXPRESIÓN ')' @15 BODY [ 'else' BODY ] ';'</div>
+<div class="rr" data-rule="CYCLE">'while' '(' EXPRESIÓN ')' @15 'do' BODY ';'</div>
+<div class="rr" data-rule="F_CALL">'id' @S8 '(' [ { EXPRESIÓN @16 / ',' }+ ] ')' ';'</div>
+<div class="rr" data-rule="PROGRAMA">'program' 'id' @S1 ';' [ VARS ] { FUNCS } 'main' BODY 'end'</div>
+<div class="rr" data-rule="VARS">'var' { { 'id' / ',' }+ ':' TYPE ';' @S2 }+</div>
+<div class="rr" data-rule="FUNCS">'void' 'id' @S3 '(' [ { 'id' ':' TYPE @S4 / ',' }+ ] ')' '[' [ VARS ] BODY ']' @S5 ';'</div>
+</div>
+
+<h3>Acción de cada punto</h3>
+<div class="tabla"><table>
+<thead><tr><th>Punto</th><th>Acción</th><th>En <code>parser.py</code></th></tr></thead>
+<tbody>
+<tr><td><span class="pt">1</span></td><td>Mete el identificador a PilaO y su tipo (tomado de la tabla de variables) a PTipos.</td><td><code>p_operando_id</code></td></tr>
+<tr><td><span class="pt">2</span></td><td>Mete la constante a PilaO y su tipo a PTipos.</td><td><code>p_operando_cte</code></td></tr>
+<tr><td><span class="pt">3</span></td><td>Mete el operador que se acaba de leer a POper.</td><td><code>np_meter_operador</code></td></tr>
+<tr><td><span class="pt">4</span></td><td>Si el tope de POper es <code>*</code> o <code>/</code>, lo resuelve (genera su cuádruplo).</td><td><code>np_resolver_mult</code></td></tr>
+<tr><td><span class="pt">5</span></td><td>Si el tope de POper es <code>+</code> o <code>-</code>, lo resuelve.</td><td><code>np_resolver_suma</code></td></tr>
+<tr><td><span class="pt">6</span></td><td>Si el tope de POper es un relacional, lo resuelve.</td><td><code>np_resolver_rel</code></td></tr>
+<tr><td><span class="pt">7</span></td><td>Mete el fondo falso a POper.</td><td><code>np_fondo_falso</code></td></tr>
+<tr><td><span class="pt">8</span></td><td>Quita el fondo falso de POper.</td><td><code>np_quitar_fondo</code></td></tr>
+<tr><td><span class="pt">9</span></td><td>Solo si el signo fue <code>-</code>: si el operando es constante le cambia el signo; si es variable genera <code>(neg, x, _, t)</code>.</td><td><code>np_negar</code></td></tr>
+<tr><td><span class="pt">10</span></td><td>Mete la variable destino a PilaO y su tipo a PTipos.</td><td><code>np_meter_destino</code></td></tr>
+<tr><td><span class="pt">11</span></td><td>Mete <code>=</code> a POper (misma acción que el punto 3).</td><td><code>np_meter_operador</code></td></tr>
+<tr><td><span class="pt">12</span></td><td>Saca <code>=</code>, el valor y el destino. Valida los tipos con el cubo y genera <code>(=, valor, _, destino)</code>.</td><td><code>np_generar_asigna</code></td></tr>
+<tr><td><span class="pt">13</span></td><td>Saca el resultado de la expresión y genera <code>(print, _, _, valor)</code>.</td><td><code>np_print_expresion</code></td></tr>
+<tr><td><span class="pt">14</span></td><td>Genera <code>(print, _, _, "letrero")</code>. No usa las pilas.</td><td><code>p_item_print_letrero</code></td></tr>
+<tr><td><span class="pt">15</span></td><td>Saca el resultado de la condición y valida que sea <code>bool</code>. Aquí irá el <code>GOTOF</code>.</td><td><code>np_verificar_condicion</code></td></tr>
+<tr><td><span class="pt">16</span></td><td>Saca de la pila el resultado del argumento. Aquí irá el paso de parámetros.</td><td><code>np_sacar_argumento</code></td></tr>
+<tr><td><span class="pt s">S1</span>–<span class="pt s">S8</span></td><td>Puntos de la entrega 2: crean y llenan el directorio de funciones y las tablas de variables, y validan que variables y funciones estén declaradas.</td><td>Ver entrega 2</td></tr>
+</tbody></table></div>
+<p>En el código, la gramática de expresiones quedó así. Cada <code>np_*</code> es un no terminal vacío puesto exactamente donde va el punto:</p>
+<pre><code>expresion       : exp expresion_resto
+expresion_resto : op_rel np_meter_operador exp np_resolver_rel   |  empty
+
+exp             : termino np_resolver_suma exp_resto
+exp_resto       : PLUS np_meter_operador exp  |  MINUS np_meter_operador exp  |  empty
+
+termino         : factor np_resolver_mult termino_resto
+termino_resto   : TIMES np_meter_operador termino  |  DIVIDE np_meter_operador termino  |  empty
+
+factor          : LPAREN np_fondo_falso expresion RPAREN np_quitar_fondo
+                | PLUS operando  |  MINUS operando np_negar  |  operando</code></pre>
+
+<h2>6. Las pilas paso a paso</h2>
+<p>El programa tiene dos asignaciones con los mismos operandos. En la primera la multiplicación va antes por precedencia; en la segunda el paréntesis obliga a sumar primero.</p>
+<p class="pie-codigo">programas/precedencia.bd</p>
+<pre><code>{{archivo:Entrega3/programas/precedencia.bd}}</code></pre>
+<p>La opción <code>--traza</code> muestra el contenido de las tres pilas después de cada acción (el tope está a la derecha) y el cuádruplo que se generó en ese paso:</p>
+<pre><code>$ python main.py programas/precedencia.bd --traza
+{{cmd:Entrega3|main.py programas/precedencia.bd --traza}}</code></pre>
+<p>En la primera asignación, cuando se lee <code>c</code> el tope de POper es <code>+</code>; el punto 4 no lo resuelve porque solo busca <code>*</code> o <code>/</code>. En la segunda, el fondo falso <code>(</code> queda encima de <code>=</code> y el <code>+</code> se resuelve antes de que se lea el <code>*</code>.</p>
+
+<h2>7. Programas de prueba y su fila de cuádruplos</h2>
+<h3>Expresiones y estatutos lineales</h3>
+<p class="pie-codigo">programas/expresiones.bd</p>
+<pre><code>{{archivo:Entrega3/programas/expresiones.bd}}</code></pre>
+<pre><code>$ python main.py programas/expresiones.bd
+{{cmd:Entrega3|main.py programas/expresiones.bd}}</code></pre>
+<ul>
+<li>Cuádruplos 10 y 11: <code>a - b - c</code> se asocia por la izquierda.</li>
+<li>Cuádruplo 18: <code>a / 2.0</code> es <code>int / float</code>; el temporal es <code>float</code> y se puede asignar a <code>x</code>.</li>
+<li>Cuádruplos 20 a 23: el menos unario sobre <code>x</code> genera <code>neg</code>; la constante <code>1.5</code> no necesita temporal.</li>
+<li>Cuádruplos 30 a 32: en <code>a * 2 &gt; b + c</code> primero se resuelven los dos lados y al final la comparación.</li>
+</ul>
+
+<h3>Expresiones largas</h3>
+<p class="pie-codigo">programas/ejemplo_clase.bd</p>
+<pre><code>{{archivo:Entrega3/programas/ejemplo_clase.bd}}</code></pre>
+<pre><code>$ python main.py programas/ejemplo_clase.bd
+{{cmd:Entrega3|main.py programas/ejemplo_clase.bd}}</code></pre>
+
+<h3>Programa con funciones, ciclo y condición</h3>
+<p>Es el mismo <code>factorial.bd</code> de la entrega 1. Los cuádruplos salen en el orden del archivo: primero el cuerpo de las funciones y después <code>main</code>. Todavía no hay saltos, así que la condición del <code>while</code> (cuádruplos 3 y 4) y la del <code>if</code> (cuádruplo 11) se calculan pero nadie las usa aún.</p>
+<pre><code>$ python main.py programas/factorial.bd --tablas
+{{cmd:Entrega3|main.py programas/factorial.bd --tablas}}</code></pre>
+
+<h2>8. Errores de tipos</h2>
+<p>La verificación de tipos ocurre mientras se generan los cuádruplos, usando la pila de tipos y el cubo semántico de la entrega 2.</p>
+<div class="tabla"><table>
+<thead><tr><th>Error</th><th>Punto</th><th>Programa de prueba</th></tr></thead>
+<tbody>
+<tr><td>Asignar un <code>float</code> a una variable <code>int</code></td><td><span class="pt">12</span></td><td><code>error_tipos_asignacion.bd</code></td></tr>
+<tr><td>Operar con el resultado de una comparación</td><td><span class="pt">4</span> <span class="pt">5</span> <span class="pt">6</span></td><td><code>error_tipos_bool.bd</code></td></tr>
+<tr><td>Condición de <code>if</code> o <code>while</code> que no es una comparación</td><td><span class="pt">15</span></td><td><code>error_condicion_no_bool.bd</code></td></tr>
+</tbody></table></div>
+<pre><code>{{cmd:Entrega3|main.py programas/error_tipos_asignacion.bd}}
+{{cmd:Entrega3|main.py programas/error_tipos_bool.bd}}
+{{cmd:Entrega3|main.py programas/error_condicion_no_bool.bd}}</code></pre>
+
+<h2>9. Pruebas</h2>
+<p><code>test_entrega3.py</code> compara los cuádruplos generados contra los esperados para cada caso: precedencia, asociatividad, paréntesis anidados, signo unario, relacionales, <code>print</code>, tipos de los temporales y errores de tipos. También verifica que las tres pilas queden vacías al terminar cada programa. Las pruebas de las entregas 1 y 2 se siguen corriendo.</p>
+<pre><code>$ python -m unittest
+{{cmd:Entrega3|-m unittest}}</code></pre>
+
+<h2>10. Archivos</h2>
+<div class="tabla"><table>
+<thead><tr><th>Archivo</th><th>Contenido</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td><code>estructuras.py</code></td><td>Clases <code>Pila</code> y <code>Fila</code>.</td><td>Nuevo</td></tr>
+<tr><td><code>cuadruplos.py</code></td><td>Clase <code>Cuadruplo</code> y el generador con las tres pilas y la fila.</td><td>Nuevo</td></tr>
+<tr><td><code>parser.py</code></td><td>Gramática con los puntos semánticos (S1–S8) y los 16 puntos de generación de código.</td><td>Modificado</td></tr>
+<tr><td><code>main.py</code></td><td>Muestra la fila de cuádruplos; <code>--traza</code> y <code>--tablas</code> muestran más detalle.</td><td>Modificado</td></tr>
+<tr><td><code>cubo_semantico.py</code>, <code>directorio.py</code>, <code>lexer.py</code>, <code>errores.py</code></td><td>Entregas anteriores.</td><td>Sin cambios</td></tr>
+<tr><td><code>test_entrega3.py</code></td><td>Pruebas de esta entrega.</td><td>Nuevo</td></tr>
+</tbody></table></div>
+<pre><code>cd BabyDuck/Entrega3
+../.venv/bin/python main.py programas/expresiones.bd
+../.venv/bin/python main.py programas/precedencia.bd --traza
+../.venv/bin/python -m unittest -v</code></pre>
+
+<h2>11. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Consultas de apoyo</th><td>En una conversación previa se le pidió a la IA que explicara la lógica del proyecto: cómo funciona la gramática de BabyDuck, cómo funciona el léxico (tokens y expresiones regulares) y, sobre todo, cómo se generan los cuádruplos para esta entrega (uso de las pilas de operandos, tipos y operadores, y en qué momento se genera cada cuádruplo).</td></tr>
+<tr><th>Prompt de implementación (resumen)</th><td>"Vamos atrasados con las actividades de compiladores. Quiero hacerlo en Python, empezando desde cero. Crea una carpeta por entrega con su código bien documentado y un documento que explique lo que se hizo." Se adjuntaron las capturas de las instrucciones de Canvas de las entregas 0 a 3.</td></tr>
+<tr><th>Qué generó</th><td><code>estructuras.py</code>, <code>cuadruplos.py</code>, los puntos neurálgicos de generación de código en <code>parser.py</code>, los programas de prueba, <code>test_entrega3.py</code>, los diagramas con puntos y este documento.</td></tr>
+<tr><th>Decisiones que conviene confirmar</th><td>El menos unario se traduce con un operador <code>neg</code> (o cambiando el signo de la constante). Los temporales se numeran de corrido en todo el programa. El alcance se limitó a expresiones y estatutos lineales, como pide la entrega.</td></tr>
+<tr><th>Cómo se verificó</th><td>Pruebas automatizadas que comparan cuádruplo por cuádruplo, y revisión a mano de las expresiones de la sección 7. Las salidas de este documento las produce el código al construir el documento.</td></tr>
+</tbody></table></div>

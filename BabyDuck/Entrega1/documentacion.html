@@ -1,0 +1,457 @@
+<meta charset="utf-8">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>BabyDuck Entrega 1</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: una sola columna de lectura (~46rem); tablas, código y diagramas
+   pueden ser más anchos y hacen scroll dentro de su propio contenedor. */
+:root {
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --ink: #1a2230;
+  --muted: #5a6577;
+  --line: #d8dde6;
+  --accent: #1d5bb8;
+  --duck: #f2b705;
+  --on-duck: #2b2100;
+  --code-bg: #edf0f5;
+  --ok: #1c7447;
+  --err: #b0362e;
+  --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151c; --surface: #19202a; --ink: #e5e9f0; --muted: #9ba7b9;
+    --line: #2d3644; --accent: #84b3ff; --duck: #f5c531; --on-duck: #2b2100;
+    --code-bg: #1e2531; --ok: #62c692; --err: #f28d83; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151c; --surface: #19202a; --ink: #e5e9f0; --muted: #9ba7b9;
+  --line: #2d3644; --accent: #84b3ff; --duck: #f5c531; --on-duck: #2b2100;
+  --code-bg: #1e2531; --ok: #62c692; --err: #f28d83; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 400 1rem/1.65 var(--font-body);
+  padding-block: 2.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.pagina { max-width: 46rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1.1rem; min-width: 0; }
+.pagina > * { margin: 0; min-width: 0; }
+.eyebrow { font: 500 .78rem/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 700 2.1rem/1.15 var(--font-display); text-wrap: balance; letter-spacing: -.01em; }
+h2 { font: 600 1.4rem/1.25 var(--font-display); text-wrap: balance; margin-top: 2rem !important; padding-top: 1.4rem; border-top: 1px solid var(--line); }
+h3 { font: 600 1.05rem/1.3 var(--font-display); margin-top: .6rem !important; }
+.lead { font-size: 1.1rem; color: var(--muted); }
+a { color: var(--accent); }
+ul, ol { padding-left: 1.3rem; display: flex; flex-direction: column; gap: .35rem; }
+li > ul { margin-top: .35rem; }
+code { font: 500 .88em var(--font-mono); background: var(--code-bg); padding: .08em .35em; border-radius: 4px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: .9rem 1rem; overflow-x: auto; font: 400 .82rem/1.55 var(--font-mono); tab-size: 4; }
+pre code { background: none; padding: 0; font: inherit; }
+.pie-codigo { font: 500 .75rem var(--font-mono); color: var(--muted); margin-bottom: -.8rem !important; }
+
+/* Ruta de entregas */
+.ruta { list-style: none; padding: 0; display: flex; flex-direction: row; flex-wrap: wrap; gap: .4rem; font: 500 .8rem var(--font-mono); }
+.ruta li { border: 1px solid var(--line); border-radius: 999px; padding: .2rem .7rem; color: var(--muted); }
+.ruta li[aria-current] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* Tablas */
+.tabla { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .5rem .75rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child > td { border-bottom: 0; }
+th { font: 600 .72rem var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td.err, .err { color: var(--err); font-weight: 600; }
+td.ok, .ok { color: var(--ok); font-weight: 600; }
+td code { white-space: nowrap; }
+
+/* Notas */
+.nota { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: .85rem 1rem; display: flex; flex-direction: column; gap: .5rem; }
+.nota > * { margin: 0; }
+.nota strong:first-child { font-family: var(--font-display); }
+.nota.revisar { border-color: var(--duck); border-width: 2px; }
+
+/* Marcador de punto neurálgico (en texto y tablas) */
+.pt, .rr-p { display: inline-flex; align-items: center; justify-content: center; min-width: 1.55rem; height: 1.55rem; padding: 0 .3rem; border-radius: 999px; background: var(--duck); color: var(--on-duck); font: 700 .72rem/1 var(--font-mono); flex: none; }
+.pt.s, .rr-p.rr-ps { background: transparent; color: var(--ink); border: 1.5px solid var(--duck); }
+
+/* Diagramas de sintaxis */
+.diagramas { display: flex; flex-direction: column; gap: .6rem; }
+.rr { display: block; overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: .7rem .9rem .9rem; }
+.rr-name { display: block; font: 600 .74rem var(--font-mono); letter-spacing: .08em; color: var(--muted); margin-bottom: .55rem; }
+.rr-body, .rr-seq { display: inline-flex; align-items: center; white-space: nowrap; }
+.rr-ln { display: inline-block; width: 13px; height: 0; border-top: 1.5px solid var(--muted); flex: none; }
+.rr-ln.rr-fill { flex: 1 1 13px; }
+.rr-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+.rr-alt { display: inline-flex; flex-direction: column; gap: 5px; border-left: 1.5px solid var(--muted); border-right: 1.5px solid var(--muted); border-radius: 9px; }
+.rr-row { display: flex; align-items: center; min-height: 1.7rem; }
+.rr-back .rr-ln { border-top-style: dashed; }
+.rr-loop { font: 600 .85rem var(--font-mono); color: var(--muted); padding: 0 .15rem; }
+.rr-t, .rr-n { font: 500 .8rem/1 var(--font-mono); padding: .38rem .6rem; border: 1.5px solid var(--ink); }
+.rr-t { border-radius: 999px; background: var(--code-bg); }
+.rr-n { border-radius: 3px; border-color: var(--accent); color: var(--accent); }
+.leyenda { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; align-items: center; font-size: .85rem; color: var(--muted); }
+.leyenda span { display: inline-flex; align-items: center; gap: .4rem; }
+
+/* Esquema de estructuras */
+.esquema { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; }
+.esquema > div { border: 1.5px solid var(--ink); border-radius: 4px; background: var(--surface); min-width: 0; }
+.esquema h4 { margin: 0; padding: .4rem .7rem; font: 600 .78rem var(--font-mono); letter-spacing: .05em; border-bottom: 1.5px solid var(--ink); background: var(--code-bg); }
+.esquema dl { margin: 0; padding: .5rem .7rem; display: grid; grid-template-columns: auto 1fr; gap: .2rem .7rem; font-size: .85rem; }
+.esquema dt { font: 500 .8rem var(--font-mono); }
+.esquema dd { margin: 0; color: var(--muted); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (max-width: 30rem) { h1 { font-size: 1.65rem; } body { font-size: .96rem; } }
+</style>
+<main class="pagina">
+<p class="eyebrow">TC3002B · Compiladores · Proyecto BabyDuck</p>
+<h1>Entrega 1: Scanner y parser</h1>
+<p class="lead">Selección de herramienta, scanner y parser en Python con PLY, y plan de pruebas.</p>
+<ol class="ruta" aria-label="Entregas del proyecto"><li>Entrega 0 · Léxico y gramática</li><li aria-current="step">Entrega 1 · Scanner y parser</li><li>Entrega 2 · Semántica de variables</li><li>Entrega 3 · Cuádruplos</li></ol>
+<h2>1. Herramientas investigadas</h2>
+<p>En la tarea previa se probaron generadores para C y Go (flex/bison, goyacc y ANTLR). Para el proyecto se cambió a Python, así que se compararon las opciones disponibles para ese lenguaje.</p>
+<div class="tabla"><table>
+<thead><tr><th>Herramienta</th><th>Algoritmo</th><th>Cómo se escriben las reglas</th><th>A favor</th><th>En contra</th></tr></thead>
+<tbody>
+<tr><td><strong>PLY</strong><br>(Python Lex-Yacc)</td><td>LALR(1)</td><td>En el mismo archivo Python: expresiones regulares en variables <code>t_*</code> y reglas BNF en el docstring de funciones <code>p_*</code>.</td><td>Mismo modelo que lex/yacc y bison de la tarea previa. No hay paso de generación de código. Las acciones van pegadas a la regla, lo que sirve para los puntos neurálgicos.</td><td>Ya no recibe versiones nuevas (la última es la 3.11). BNF puro: lo opcional y las repeticiones se escriben con reglas auxiliares.</td></tr>
+<tr><td><strong>Lark</strong></td><td>Earley o LALR(1)</td><td>Gramática EBNF en un texto aparte; construye el árbol de sintaxis solo.</td><td>Gramática muy compacta (<code>?</code>, <code>*</code>, <code>+</code>). Mantenimiento activo.</td><td>Las acciones se ejecutan después, recorriendo el árbol. Poner una acción a la mitad de una regla no es natural.</td></tr>
+<tr><td><strong>ANTLR 4</strong><br>(destino Python)</td><td>ALL(*) (descendente)</td><td>Archivo <code>.g4</code> en EBNF; genera las clases del lexer y del parser.</td><td>Muy documentado, buenas herramientas para ver árboles. Ya se usó en la tarea previa.</td><td>Necesita Java para generar el código. Agrega archivos generados al proyecto. Las acciones dentro de la gramática la amarran a un lenguaje.</td></tr>
+<tr><td><strong>SLY</strong></td><td>LALR(1)</td><td>Clases <code>Lexer</code> y <code>Parser</code> con decoradores.</td><td>Sintaxis más moderna que PLY, del mismo autor.</td><td>Menos ejemplos y documentación. Tampoco recibe versiones nuevas.</td></tr>
+</tbody></table></div>
+
+<h3>Herramienta seleccionada: PLY</h3>
+<ul>
+<li><strong>Conecta con Python sin pasos extra.</strong> El scanner y el parser son módulos normales de Python; se corren y se depuran igual que el resto del código.</li>
+<li><strong>Las entregas siguientes piden puntos neurálgicos.</strong> PLY permite ejecutar código al terminar una regla o a la mitad de ella. Con Lark o con los visitors de ANTLR habría que recorrer un árbol después.</li>
+<li><strong>Es el mismo modelo de la tarea previa.</strong> Lo aprendido con flex/bison (tokens, reglas BNF, conflictos shift/reduce) aplica directo.</li>
+<li><strong>Buena documentación.</strong> El manual oficial cubre lex y yacc con ejemplos completos.</li>
+</ul>
+<p>El costo que se acepta: la gramática se escribe en BNF puro, y la versión queda fija en <code>ply==3.11</code> (ver <code>requirements.txt</code>).</p>
+
+<h2>2. Cómo se dieron de alta las reglas</h2>
+<h3>Scanner: <code>lexer.py</code></h3>
+<p>PLY lee tres cosas del módulo: la lista <code>tokens</code>, las variables <code>t_NOMBRE</code> (expresión regular de un token simple) y las funciones <code>t_NOMBRE</code> (expresión regular en el docstring más una acción).</p>
+<pre><code>tokens = ["ID", "CTE_INT", "CTE_FLOAT", "CTE_STRING", "PLUS", ...] + list(palabras_reservadas.values())
+
+t_PLUS = r"\+"          # token simple: solo su expresión regular
+t_NE   = r"!="
+
+def t_CTE_FLOAT(t):     # token con acción: convierte el lexema a número
+    r"\d+\.\d+"
+    t.value = float(t.value)
+    return t
+
+def t_ID(t):
+    r"[A-Za-z_][A-Za-z0-9_]*"
+    t.type = palabras_reservadas.get(t.value, "ID")   # ¿es palabra reservada?
+    return t</code></pre>
+<ul>
+<li>Las funciones se prueban en el orden en que están escritas. Por eso <code>t_CTE_FLOAT</code> va antes que <code>t_CTE_INT</code>: si no, <code>3.14</code> se leería como el entero <code>3</code>.</li>
+<li>Las palabras reservadas no tienen regla propia. Se reconocen como <code>ID</code> y se reclasifican con un diccionario.</li>
+<li><code>t_error</code> lanza <code>ErrorLexico</code> con el carácter y la línea.</li>
+</ul>
+
+<h3>Parser: <code>parser.py</code></h3>
+<p>Cada función <code>p_*</code> lleva en su docstring una o varias reglas en BNF. PLY las junta y construye la tabla LALR(1) al importar el módulo.</p>
+<pre><code>def p_condicion(p):
+    """condicion : IF LPAREN expresion RPAREN body else_opt SEMICOLON
+    else_opt  : ELSE body
+              | empty"""
+
+def p_empty(p):
+    """empty :"""
+
+def p_error(tok):
+    raise ErrorSintactico(f"no se esperaba '{tok.value}' (token {tok.type})", tok.lineno)</code></pre>
+<p>En esta entrega las funciones no tienen cuerpo porque el parser solo valida. En las entregas 2 y 3 ese cuerpo es donde van las acciones semánticas.</p>
+
+<h3>Gramática registrada</h3>
+<p>Esta es la gramática completa tal como PLY la tiene registrada (se obtiene del parser ya construido, no se copió a mano). Tiene 0 conflictos shift/reduce y 0 conflictos reduce/reduce.</p>
+<pre><code>programa ::= PROGRAM ID SEMICOLON vars_opt funcs MAIN body END
+
+vars_opt ::= VAR lista_decl
+           | ε
+
+lista_decl ::= decl lista_decl
+             | decl
+
+decl ::= lista_ids COLON tipo SEMICOLON
+
+lista_ids ::= ID COMMA lista_ids
+            | ID
+
+tipo ::= INT
+       | FLOAT
+
+funcs ::= func funcs
+        | ε
+
+func ::= VOID ID LPAREN params_opt RPAREN LBRACKET vars_opt body RBRACKET SEMICOLON
+
+params_opt ::= lista_params
+             | ε
+
+lista_params ::= param COMMA lista_params
+               | param
+
+param ::= ID COLON tipo
+
+body ::= LBRACE estatutos RBRACE
+
+estatutos ::= estatuto estatutos
+            | ε
+
+estatuto ::= asigna
+           | condicion
+           | ciclo
+           | llamada
+           | imprime
+
+asigna ::= ID ASSIGN expresion SEMICOLON
+
+condicion ::= IF LPAREN expresion RPAREN body else_opt SEMICOLON
+
+else_opt ::= ELSE body
+           | ε
+
+ciclo ::= WHILE LPAREN expresion RPAREN DO body SEMICOLON
+
+llamada ::= ID LPAREN args_opt RPAREN SEMICOLON
+
+args_opt ::= lista_args
+           | ε
+
+lista_args ::= expresion COMMA lista_args
+             | expresion
+
+imprime ::= PRINT LPAREN lista_print RPAREN SEMICOLON
+
+lista_print ::= item_print COMMA lista_print
+              | item_print
+
+item_print ::= expresion
+             | CTE_STRING
+
+expresion ::= exp expresion_resto
+
+expresion_resto ::= op_rel exp
+                  | ε
+
+op_rel ::= GT
+         | LT
+         | NE
+
+exp ::= termino exp_resto
+
+exp_resto ::= PLUS exp
+            | MINUS exp
+            | ε
+
+termino ::= factor termino_resto
+
+termino_resto ::= TIMES termino
+                | DIVIDE termino
+                | ε
+
+factor ::= LPAREN expresion RPAREN
+         | PLUS operando
+         | MINUS operando
+         | operando
+
+operando ::= ID
+           | cte
+
+cte ::= CTE_INT
+      | CTE_FLOAT</code></pre>
+
+<h2>3. Plan de pruebas</h2>
+<p>Las pruebas están en <code>test_entrega1.py</code> y usan <code>unittest</code>, que viene con Python. Hay dos tipos: programas completos en la carpeta <code>programas/</code> y casos pequeños escritos dentro del archivo de pruebas.</p>
+<div class="tabla"><table>
+<thead><tr><th>Qué se prueba</th><th>Casos principales</th><th>Resultado esperado</th></tr></thead>
+<tbody>
+<tr><td rowspan="5">Scanner</td><td>Las 12 palabras reservadas</td><td>Un token distinto por palabra</td></tr>
+<tr><td><code>iffy</code>, <code>printer</code>, <code>main2</code>, <code>Program</code></td><td>Son <code>ID</code>, no palabras reservadas</td></tr>
+<tr><td><code>42</code>, <code>3.14</code>, <code>"hola mundo"</code>, <code>10.5</code></td><td>Tipo y valor correctos; el flotante no se parte</td></tr>
+<tr><td><code>a=b+1;</code> sin espacios; texto en varias líneas</td><td>Tokens correctos y número de línea correcto</td></tr>
+<tr><td><code>$</code>, <code>!</code> solo, string sin cerrar</td><td class="err">Error léxico</td></tr>
+<tr><td rowspan="4">Parser, programas válidos</td><td>Programa mínimo: <code>program p; main { } end</code></td><td class="ok">Aceptado</td></tr>
+<tr><td>Expresiones: precedencia, paréntesis anidados, signo unario, relacionales</td><td class="ok">Aceptado</td></tr>
+<tr><td><code>print</code> con varios elementos, <code>if</code>, <code>if/else</code>, <code>while</code>, anidados</td><td class="ok">Aceptado</td></tr>
+<tr><td>Funciones con y sin parámetros, con variables locales, y sus llamadas</td><td class="ok">Aceptado</td></tr>
+<tr><td rowspan="3">Parser, programas inválidos</td><td>Estructura: archivo vacío, falta <code>program</code>, <code>main</code>, <code>end</code> o <code>;</code>; <code>var</code> sin declaraciones; tipo inexistente</td><td class="err">Error de sintaxis</td></tr>
+<tr><td>Estatutos: falta <code>;</code>, paréntesis sin cerrar, dos operadores seguidos, dos relacionales, <code>print()</code> vacío, <code>while</code> sin <code>do</code></td><td class="err">Error de sintaxis</td></tr>
+<tr><td>Funciones: sin corchetes, sin <code>;</code> final, parámetro sin tipo, tipo de retorno distinto de <code>void</code></td><td class="err">Error de sintaxis</td></tr>
+</tbody></table></div>
+
+<h3>Resultado de las pruebas</h3>
+<pre><code>$ python -m unittest
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 0.011s
+
+OK</code></pre>
+
+<h3>Programa válido</h3>
+<p class="pie-codigo">programas/factorial.bd</p>
+<pre><code>program factorial;
+var n, resultado : int;
+
+void calcula(limite : int) [
+    var i : int;
+    {
+        i = 1;
+        resultado = 1;
+        while (i &lt; limite + 1) do {
+            resultado = resultado * i;
+            i = i + 1;
+        };
+    }
+];
+
+void saluda() [
+    {
+        print("Factorial en BabyDuck");
+    }
+];
+
+main {
+    n = 5;
+    saluda();
+    calcula(n);
+    if (resultado &gt; 100) {
+        print("grande", resultado);
+    } else {
+        print("chico", resultado);
+    };
+    if (n != 0) {
+        print("n no es cero");
+    };
+}
+end</code></pre>
+<pre><code>$ python main.py programas/factorial.bd
+programas/factorial.bd: programa válido (léxico y sintaxis correctos)</code></pre>
+
+<h3>Tokens de un programa</h3>
+<pre><code>$ python main.py programas/minimo.bd --tokens
+LÍNEA  TOKEN        LEXEMA
+1      PROGRAM      program
+1      ID           minimo
+1      SEMICOLON    ;
+2      MAIN         main
+2      LBRACE       {
+3      RBRACE       }
+4      END          end
+
+programas/minimo.bd: programa válido (léxico y sintaxis correctos)</code></pre>
+
+<h3>Programas con error</h3>
+<p>Cada mensaje dice la fase que detectó el error, la línea y qué se encontró.</p>
+<pre><code>$ python main.py programas/error_lexico.bd
+programas/error_lexico.bd: Error léxico (línea 4): carácter no reconocido '$'
+
+$ python main.py programas/error_sintaxis.bd
+programas/error_sintaxis.bd: Error de sintaxis (línea 4): no se esperaba ';' (token SEMICOLON)
+
+$ python main.py programas/error_falta_punto_y_coma.bd
+programas/error_falta_punto_y_coma.bd: Error de sintaxis (línea 5): no se esperaba 'print' (token PRINT)</code></pre>
+<p>En el último caso el <code>;</code> falta en la línea 4, pero el error se reporta en la línea 5: el parser se da cuenta hasta que lee el siguiente token (<code>print</code>).</p>
+
+<h2>4. Archivos y cómo correrlo</h2>
+<div class="tabla"><table>
+<thead><tr><th>Archivo</th><th>Contenido</th></tr></thead>
+<tbody>
+<tr><td><code>lexer.py</code></td><td>Scanner: tokens y expresiones regulares.</td></tr>
+<tr><td><code>parser.py</code></td><td>Parser: gramática BNF y manejo de errores de sintaxis.</td></tr>
+<tr><td><code>errores.py</code></td><td>Excepciones <code>ErrorLexico</code> y <code>ErrorSintactico</code>.</td></tr>
+<tr><td><code>main.py</code></td><td>Compila un archivo <code>.bd</code> desde la terminal.</td></tr>
+<tr><td><code>test_entrega1.py</code></td><td>Plan de pruebas automatizado.</td></tr>
+<tr><td><code>programas/</code></td><td>Programas BabyDuck de prueba. Los que empiezan con <code>error_</code> deben fallar.</td></tr>
+</tbody></table></div>
+<pre><code>cd BabyDuck
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+cd Entrega1
+../.venv/bin/python main.py programas/factorial.bd
+../.venv/bin/python -m unittest -v</code></pre>
+
+<h2>5. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Qué se le pidió</th><td>Reconstruir las entregas 0 a 3 del proyecto en Python, una carpeta por entrega, con el código documentado y un documento por entrega, a partir de las capturas de las instrucciones de Canvas.</td></tr>
+<tr><th>Qué generó</th><td>La comparación de herramientas, <code>lexer.py</code>, <code>parser.py</code>, los programas de prueba, <code>test_entrega1.py</code> y este documento.</td></tr>
+<tr><th>Cómo se verificó</th><td>Se corrieron las pruebas automatizadas y los programas de ejemplo. Las salidas que aparecen en este documento son las que produce el código al construir el documento, no están escritas a mano. Se revisó que PLY reporte 0 conflictos en la gramática.</td></tr>
+</tbody></table></div>
+
+</main>
+<script>
+/* Dibuja diagramas de sintaxis a partir de una notación tipo EBNF escrita
+   dentro de cada <div class="rr" data-rule="NOMBRE">:
+     'x'            terminal            NOMBRE        no terminal
+     @n             punto neurálgico    ( a | b )     alternativas
+     [ a ]          opcional            { a }         cero o más
+     { a }+         uno o más           { a / s }+    uno o más separados por s */
+(function () {
+  var esc = function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
+  var VACIO = { k: "seq", s: [] };
+
+  function parse(src) {
+    var t = src.match(/'[^']*'|@\w+|[\[\]{}()|\/+]|[^\s'@\[\]{}()|\/+]+/g) || [], i = 0;
+    function alt() {
+      var a = [seq()];
+      while (t[i] === "|") { i++; a.push(seq()); }
+      return a.length > 1 ? { k: "alt", a: a } : a[0];
+    }
+    function seq() {
+      var s = [];
+      while (i < t.length && !/^[\]})|\/]$/.test(t[i])) s.push(item());
+      return s.length === 1 ? s[0] : { k: "seq", s: s };
+    }
+    function item() {
+      var x = t[i++], a, r, sep = null;
+      if (x === "[") { a = alt(); i++; return { k: "alt", a: [a, VACIO] }; }
+      if (x === "(") { a = alt(); i++; return a; }
+      if (x === "{") {
+        a = alt();
+        if (t[i] === "/") { i++; sep = alt(); }
+        i++;
+        r = { k: "rep", a: a, sep: sep };
+        if (t[i] === "+") { i++; return r; }
+        return { k: "alt", a: [r, VACIO] };
+      }
+      if (x[0] === "'") return { k: "t", v: x.slice(1, -1) };
+      if (x[0] === "@") return { k: "p", v: x.slice(1) };
+      return { k: "n", v: x };
+    }
+    return alt();
+  }
+
+  var LN = '<i class="rr-ln"></i>', FILL = '<i class="rr-ln rr-fill"></i>';
+  function fila(n, clase) {
+    var dentro = n.k === "seq" && !n.s.length ? "" : LN + dibuja(n);
+    return '<span class="rr-row' + (clase || "") + '">' + dentro + FILL + "</span>";
+  }
+  function dibuja(n) {
+    if (n.k === "t") return '<span class="rr-t">' + esc(n.v) + "</span>";
+    if (n.k === "n") return '<span class="rr-n">' + esc(n.v) + "</span>";
+    if (n.k === "p") return '<span class="rr-p' + (/^S/.test(n.v) ? " rr-ps" : "") + '" title="punto neurálgico ' + esc(n.v) + '">' + esc(n.v) + "</span>";
+    if (n.k === "seq") return '<span class="rr-seq">' + n.s.map(dibuja).join(LN) + "</span>";
+    if (n.k === "alt") return '<span class="rr-alt">' + n.a.map(function (a) { return fila(a); }).join("") + "</span>";
+    var regreso = '<span class="rr-row rr-back">' + LN + '<span class="rr-loop" title="se repite">↺</span>' + (n.sep ? LN + dibuja(n.sep) : "") + FILL + "</span>";
+    return '<span class="rr-alt">' + fila(n.a) + regreso + "</span>";
+  }
+
+  document.querySelectorAll(".rr").forEach(function (el) {
+    var arbol = parse(el.textContent);
+    el.innerHTML = '<span class="rr-name">' + esc(el.dataset.rule) + '</span><span class="rr-body"><span class="rr-dot"></span>' +
+      LN + dibuja(arbol) + LN + '<span class="rr-dot"></span></span>';
+  });
+})();
+</script>

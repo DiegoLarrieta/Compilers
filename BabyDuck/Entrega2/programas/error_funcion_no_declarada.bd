@@ -1,0 +1,6 @@
+program malo;
+var a : int;
+main {
+    calcula(a);
+}
+end
