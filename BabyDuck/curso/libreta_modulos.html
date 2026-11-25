@@ -1,0 +1,319 @@
+<title>Libreta: Módulos</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Caveat:wght@600;700&display=swap">
+<style>
+/* Hoja de libreta: renglones azules, margen rojo; tinta azul para respuestas y roja para correcciones. */
+:root {
+  --papel: #FDFBF4; --renglon: #C9DAF0; --margen: #E8A3A3; --tinta: #1F3A8A; --lapiz: #3A3A3A;
+  --rojo: #C2261E; --gris: #7A7466; --linea-tabla: #8E9AAF; --fondo: #E9E5DA;
+  --c-global: #DCEAF8; --c-dos: #FBE0D2; --c-uno1: #DFF0DA; --c-uno2: #FDF1C7; --sombra: rgba(60,50,30,.18);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --papel: #1E2228; --renglon: #2C3A4E; --margen: #6B3434; --tinta: #9DB8FF; --lapiz: #D9D6CE;
+  --rojo: #FF8A80; --gris: #A39E92; --linea-tabla: #5A6577; --fondo: #121417;
+  --c-global: #1E3550; --c-dos: #4A2E22; --c-uno1: #22402A; --c-uno2: #4A4020; --sombra: rgba(0,0,0,.5); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --papel: #1E2228; --renglon: #2C3A4E; --margen: #6B3434; --tinta: #9DB8FF; --lapiz: #D9D6CE;
+  --rojo: #FF8A80; --gris: #A39E92; --linea-tabla: #5A6577; --fondo: #121417;
+  --c-global: #1E3550; --c-dos: #4A2E22; --c-uno1: #22402A; --c-uno2: #4A4020; --sombra: rgba(0,0,0,.5); color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--lapiz); margin: 0; font: 19px/30px "Kalam", "Comic Sans MS", cursive;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+.hoja { max-width: 900px; margin: 0 auto 32px; background-color: var(--papel);
+  background-image: linear-gradient(90deg, transparent 58px, var(--margen) 58px, var(--margen) 60px, transparent 60px),
+                    repeating-linear-gradient(180deg, transparent 0 29px, var(--renglon) 29px 30px);
+  box-shadow: 0 2px 10px var(--sombra); border-radius: 3px; padding: 30px 24px 40px 78px; position: relative; }
+.hoja::before { content: ""; position: absolute; left: 22px; top: 40px; bottom: 40px; width: 14px;
+  background: radial-gradient(circle, var(--fondo) 5px, transparent 6px) 0 0 / 14px 90px repeat-y; }
+@media (max-width: 640px) { .hoja { padding-left: 46px; padding-right: 14px; background-image:
+  linear-gradient(90deg, transparent 32px, var(--margen) 32px, var(--margen) 34px, transparent 34px),
+  repeating-linear-gradient(180deg, transparent 0 29px, var(--renglon) 29px 30px); } .hoja::before { left: 8px; } body { font-size: 17px; } }
+
+h1, h2, h3 { font-family: "Caveat", "Kalam", cursive; color: var(--tinta); margin: 0; font-weight: 700; text-wrap: balance; }
+h1 { font-size: 46px; line-height: 60px; }
+h2 { font-size: 34px; line-height: 60px; margin-top: 30px; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 6px; }
+h3 { font-size: 27px; line-height: 30px; margin-top: 30px; }
+p, li { margin: 0; }
+ul, ol { margin: 0; padding-left: 26px; }
+.fecha { float: right; color: var(--gris); font-size: 17px; }
+.tinta { color: var(--tinta); }
+.rojo { color: var(--rojo); }
+.gris { color: var(--gris); }
+b { font-weight: 700; }
+code, .codigo { font-family: "Kalam", cursive; font-weight: 700; color: var(--tinta); }
+pre.fuente { font: 17px/30px "Kalam", cursive; margin: 0; white-space: pre; overflow-x: auto; color: var(--lapiz); }
+.dos-col { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 760px) { .dos-col { grid-template-columns: minmax(0, 1fr); } }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; font: inherit; }
+table.cuad td, table.cuad th { border: 1.5px solid var(--linea-tabla); padding: 0 8px; height: 30px; line-height: 28px; white-space: nowrap; }
+table.cuad th { color: var(--gris); font-weight: 400; font-size: 16px; }
+table.cuad td.n { color: var(--gris); text-align: right; font-size: 16px; border-color: transparent; border-right-color: var(--linea-tabla); }
+table.cuad td { color: var(--tinta); }
+table.cuad td.op { font-weight: 700; }
+table.cuad tr.inicio td.n { color: var(--rojo); font-weight: 700; }
+.etq { color: var(--rojo); font-size: 15px; padding-left: 6px !important; border: 0 !important; white-space: nowrap; }
+.recuadro { border: 2px solid var(--lapiz); border-radius: 4px; padding: 0 14px; margin: 0 0 30px; display: inline-block; }
+.nota { border-left: 3px solid var(--rojo); padding-left: 12px; color: var(--rojo); margin: 30px 0 0; }
+.ojo { color: var(--tinta); border: 2px dashed var(--tinta); border-radius: 10px; padding: 0 12px; margin-top: 30px; }
+/* Memoria de ejecución */
+.memorias { display: flex; flex-wrap: wrap; gap: 14px 22px; margin-top: 0; }
+.marco { min-width: 0; }
+.marco h4 { font: 700 18px/30px "Kalam", cursive; margin: 0; color: var(--lapiz); }
+.marco h4 small { font-weight: 400; color: var(--gris); }
+table.mem td { height: 30px; line-height: 28px; padding: 0 8px; white-space: nowrap; }
+table.mem td.var { color: var(--gris); text-align: right; font-style: italic; font-size: 16px; }
+table.mem td.val { border: 1.5px solid var(--linea-tabla); min-width: 64px; text-align: center; font-weight: 700; color: var(--tinta); }
+.g .val { background: var(--c-global); } .d .val { background: var(--c-dos); }
+.u1 .val { background: var(--c-uno1); } .u2 .val { background: var(--c-uno2); }
+.leyenda { display: flex; flex-wrap: wrap; gap: 0 18px; font-size: 16px; }
+.leyenda span::before { content: ""; display: inline-block; width: 26px; height: 14px; margin-right: 6px; vertical-align: -1px; border: 1px solid var(--linea-tabla); }
+.leyenda .lg::before { background: var(--c-global); } .leyenda .ld::before { background: var(--c-dos); }
+.leyenda .lu1::before { background: var(--c-uno1); } .leyenda .lu2::before { background: var(--c-uno2); }
+.salida { display: inline-block; border: 2px solid var(--lapiz); padding: 0 10px; margin-left: 6px; color: var(--rojo); font-weight: 700; }
+.tachado { text-decoration: line-through; color: var(--gris); }
+.pestanas { display: flex; flex-wrap: wrap; gap: 8px; margin: 30px 0 0; }
+.pestanas button { font: 700 17px/26px "Kalam", cursive; color: var(--tinta); background: var(--papel); border: 2px solid var(--tinta); border-radius: 18px; padding: 1px 14px; cursor: pointer; }
+.pestanas button[aria-pressed="true"] { background: var(--tinta); color: var(--papel); }
+.pestanas button:focus-visible { outline: 2px solid var(--rojo); outline-offset: 2px; }
+</style>
+
+<!-- ======================================================= HOJA 1 -->
+<article class="hoja">
+  <span class="fecha">TC3002B · Compiladores</span>
+  <h1>Ejercicio Módulos: <span class="tinta">program pelos</span></h1>
+  <p class="gris">Cuádruplos, recursos de cada módulo y memoria de ejecución.</p>
+
+  <h2>El programa</h2>
+<pre class="fuente">program pelos;
+var int i, j, k;
+
+int uno (int j)
+var int i;
+{ i = j + (k - j*2 + j);
+  if (j > 0)
+     { return ( uno (i - j) ); }
+  else
+     { return ( i + k ); }
+}
+
+void dos (int i, int j)
+var int x, y;
+{ x = i + j;
+  if (x > j * k)
+     { print ( uno (x - k) ); }
+  else
+     { print ( uno (j) ); }
+}
+
+main ( )
+{ read (k);
+  i = 5;  j = i * 2 + i;
+  dos (j - i, j);
+}</pre>
+
+  <h3>Reglas que usé <span class="gris" style="font-size:20px">(las de clase)</span></h3>
+  <ul>
+    <li><code>uno</code> regresa <code>int</code> → tiene una <b>variable global con su nombre</b> (<code>uno</code>) donde se guarda lo que regresa. Por eso aparece en la memoria global.</li>
+    <li><code>return x</code> → <code>(RETURN, _, _, x)</code>: guarda x en la global <code>uno</code> y se sale de la función.</li>
+    <li>Llamada: <code>ERA</code> al leer el nombre → se evalúa cada argumento → <code>PARAM</code> → <code>GOSUB</code>.</li>
+    <li>Si la función regresa valor, justo después del <code>GOSUB</code> se copia la global a un temporal: <code>(=, uno, _, tN)</code>. Así una segunda llamada no la pisa.</li>
+    <li>Los temporales se numeran desde t1 en cada módulo.</li>
+  </ul>
+
+  <h2>Cuádruplos</h2>
+  <div class="dos-col">
+    <div class="scroll"><table class="cuad" id="pelos-a"></table></div>
+    <div class="scroll"><table class="cuad" id="pelos-b"></table></div>
+  </div>
+  <p class="nota">En el cuádruplo 15 el <code>GOTO</code> nunca se ejecuta, porque el RETURN del 14 ya se salió. Se genera igual porque el if-else siempre pone un GOTO al final del bloque verdadero.</p>
+
+  <h2>Recursos</h2>
+  <div class="scroll"><div class="recuadro">
+    <table class="mem">
+      <tr><td class="var"><b>Global</b></td><td><b class="tinta">4</b> var <span class="gris">(i, j, k, uno)</span></td><td><b class="tinta">3</b> temp</td></tr>
+      <tr><td class="var"><b>UNO</b></td><td><b class="tinta">2</b> var-par <span class="gris">(j, i)</span></td><td><b class="tinta">8</b> temp</td></tr>
+      <tr><td class="var"><b>DOS</b></td><td><b class="tinta">4</b> var-par <span class="gris">(i, j, x, y)</span></td><td><b class="tinta">6</b> temp</td></tr>
+    </table>
+  </div></div>
+  <p>Así es como se cuenta: var-par son los parámetros más las variables locales. Temp es el número del temporal más alto que usa el módulo: UNO llega a t8, DOS a t6 y main a t3.</p>
+
+  <h2>Memoria de ejecución</h2>
+  <div class="leyenda"><span class="lg">mem global</span><span class="ld">mem DOS</span><span class="lu1">mem UNO (1ª llamada)</span><span class="lu2">mem UNO (llamada recursiva)</span></div>
+  <div class="pestanas" role="group" aria-label="Escoge el caso">
+    <button data-caso="0" aria-pressed="false">Ejemplo 1 · k = 3</button>
+    <button data-caso="1" aria-pressed="true">Ejercicio 1 · k = 0</button>
+    <button data-caso="2" aria-pressed="false">Ejercicio 2 · k = 10</button>
+  </div>
+  <div id="caso"></div>
+
+  <div class="ojo">
+    <p><b>Truco para revisar:</b> en <code>uno</code>, <code>i = j + (k − 2j + j) = k</code>. ¡Siempre vale k! Entonces:</p>
+    <ul>
+      <li>si j &gt; 0 → regresa <code>uno(k − j)</code></li>
+      <li>si j ≤ 0 → regresa <code>k + k = 2k</code></li>
+    </ul>
+    <p>k=3: uno(15) → uno(−12) → <b>6</b> &nbsp;·&nbsp; k=0: uno(25) → uno(−25) → <b>0</b> &nbsp;·&nbsp; k=10: uno(15) → uno(−5) → <b>20</b> ✓</p>
+  </div>
+</article>
+
+<!-- ======================================================= HOJA 2 -->
+<article class="hoja">
+  <span class="fecha">Tarea</span>
+  <h1>Tarea Módulos: <span class="tinta">program patito</span></h1>
+
+  <h2>El programa</h2>
+<pre class="fuente">program patito;
+var  int i, j, k;
+     float f;
+
+void uno (int a, int b)
+{  if (a > 0)
+     {  i = a + b * j + i;
+        print ( i + j );
+     }
+   else
+     {  print ( a + b );  }
+}
+
+void dos (int a, float g)
+{  int i;
+   i = a;
+   while (a > 0)
+   {  a = a - k * j;
+      uno (a * 2, a + k);
+      g = g * j - k;
+   }
+}
+
+main ()
+{  i = 2;  k = i + 1;
+   f = 3.14;
+   do
+   {  dos (i + k, f * 3);
+      print (i, j * 2, f * 2 + 1.5);
+      i = i - k / 2;
+   } while (i > 0);
+}</pre>
+
+  <h3>Antes de empezar, ojo con esto</h3>
+  <ul>
+    <li><code>uno</code> no declara variables, así que su <code>i</code> es la <b>global</b>. En <code>dos</code> hay un <code>int i</code> local que <b>tapa</b> a la global.</li>
+    <li>Las funciones son <code>void</code>: no hay variable global de retorno ni RETURN. Terminan con <code>ENDFUNC</code>.</li>
+    <li><code>do { } while (c)</code>: el cuerpo se ejecuta primero y la condición va al final. Si es <b>verdadera</b> se regresa, así que uso <code>GOTOV</code> (goto si verdadero).</li>
+    <li>Con float: <code>f * 3</code>, <code>g * j</code>, <code>f * 2 + 1.5</code> dan temporales <b>float</b>. <code>k / 2</code> es int / int → int.</li>
+  </ul>
+
+  <h2>Cuádruplos</h2>
+  <div class="dos-col">
+    <div class="scroll"><table class="cuad" id="patito-a"></table></div>
+    <div class="scroll"><table class="cuad" id="patito-b"></table></div>
+  </div>
+
+  <h2>Recursos</h2>
+  <div class="scroll"><div class="recuadro">
+    <table class="mem">
+      <tr><td class="var"><b>Global</b></td><td>var: <b class="tinta">3</b> int <span class="gris">(i, j, k)</span> · <b class="tinta">1</b> float <span class="gris">(f)</span></td><td>temp: <b class="tinta">5</b> int · <b class="tinta">3</b> float · <b class="tinta">1</b> bool</td></tr>
+      <tr><td class="var"><b>UNO</b></td><td>var-par: <b class="tinta">2</b> int <span class="gris">(a, b)</span></td><td>temp: <b class="tinta">5</b> int · <b class="tinta">1</b> bool</td></tr>
+      <tr><td class="var"><b>DOS</b></td><td>var-par: <b class="tinta">2</b> int <span class="gris">(a, i)</span> · <b class="tinta">1</b> float <span class="gris">(g)</span></td><td>temp: <b class="tinta">4</b> int · <b class="tinta">2</b> float · <b class="tinta">1</b> bool</td></tr>
+    </table>
+  </div></div>
+  <p class="gris">Total de temporales: main t1–t9, UNO t1–t6, DOS t1–t7. Las bool son los resultados de <code>&gt;</code>.</p>
+
+  <p class="nota"><b>Si te piden ejecutarlo:</b> este programa <b>no termina</b>. Lo comprobé corriendo los cuádruplos.</p>
+  <ul class="rojo">
+    <li><code>j</code> nunca recibe valor. Si vale 0, en <code>dos</code> la línea <code>a = a − k * j</code> deja a <code>a</code> igual, y el <code>while (a &gt; 0)</code> se cicla.</li>
+    <li>Si <code>j</code> valiera 1, <code>dos</code> sí termina, pero <code>uno</code> le suma a la <code>i</code> global (<code>i = a + b*j + i</code>) más de lo que main le resta (<code>k / 2 = 1</code>), así que el <code>do-while (i &gt; 0)</code> nunca acaba.</li>
+  </ul>
+  <p class="rojo">Por eso aquí solo van cuádruplos y recursos. Si la profesora pide memoria de ejecución, pregúntale qué valor tiene <code>j</code>.</p>
+</article>
+
+<script>
+/* Cuádruplos: [operador, izq, der, res, etiqueta opcional]. "_" = campo vacío. */
+const PELOS = [
+  ["GOTO","_","_","37","→ main"],
+  ["*","j","2","t1","UNO empieza"], ["-","k","t1","t2"], ["+","t2","j","t3"], ["+","j","t3","t4"], ["=","t4","_","i"],
+  [">","j","0","t5"], ["GOTOF","t5","_","16"], ["ERA","_","_","uno"], ["-","i","j","t6"], ["PARAM","t6","_","par1"],
+  ["GOSUB","uno","_","2","recursiva"], ["=","uno","_","t7"], ["RETURN","_","_","t7"], ["GOTO","_","_","18"],
+  ["+","i","k","t8","else"], ["RETURN","_","_","t8"], ["ENDFUNC","_","_","_"],
+  ["+","i","j","t1","DOS empieza"], ["=","t1","_","x"], ["*","j","k","t2"], [">","x","t2","t3"], ["GOTOF","t3","_","31"],
+  ["ERA","_","_","uno"], ["-","x","k","t4"], ["PARAM","t4","_","par1"], ["GOSUB","uno","_","2"], ["=","uno","_","t5"],
+  ["print","_","_","t5"], ["GOTO","_","_","36"],
+  ["ERA","_","_","uno","else"], ["PARAM","j","_","par1"], ["GOSUB","uno","_","2"], ["=","uno","_","t6"], ["print","_","_","t6"],
+  ["ENDFUNC","_","_","_"],
+  ["read","_","_","k","main empieza"], ["=","5","_","i"], ["*","i","2","t1"], ["+","t1","i","t2"], ["=","t2","_","j"],
+  ["ERA","_","_","dos"], ["-","j","i","t3"], ["PARAM","t3","_","par1"], ["PARAM","j","_","par2"], ["GOSUB","dos","_","19"],
+  ["END","_","_","_"]
+];
+const PATITO = [
+  ["GOTO","_","_","31","→ main"],
+  [">","a","0","t1","UNO empieza"], ["GOTOF","t1","_","11"], ["*","b","j","t2"], ["+","a","t2","t3"], ["+","t3","i","t4","i global"],
+  ["=","t4","_","i"], ["+","i","j","t5"], ["print","_","_","t5"], ["GOTO","_","_","13"],
+  ["+","a","b","t6","else"], ["print","_","_","t6"], ["ENDFUNC","_","_","_"],
+  ["=","a","_","i","DOS · i local"], [">","a","0","t1","regreso del while"], ["GOTOF","t1","_","30"], ["*","k","j","t2"],
+  ["-","a","t2","t3"], ["=","t3","_","a"], ["ERA","_","_","uno"], ["*","a","2","t4"], ["PARAM","t4","_","par1"],
+  ["+","a","k","t5"], ["PARAM","t5","_","par2"], ["GOSUB","uno","_","2"], ["*","g","j","t6","float"], ["-","t6","k","t7","float"],
+  ["=","t7","_","g"], ["GOTO","_","_","15"], ["ENDFUNC","_","_","_"],
+  ["=","2","_","i","main empieza"], ["+","i","1","t1"], ["=","t1","_","k"], ["=","3.14","_","f"],
+  ["ERA","_","_","dos","inicio del do"], ["+","i","k","t2"], ["PARAM","t2","_","par1"], ["*","f","3","t3","float"],
+  ["PARAM","t3","_","par2"], ["GOSUB","dos","_","14"], ["print","_","_","i"], ["*","j","2","t4"], ["print","_","_","t4"],
+  ["*","f","2","t5","float"], ["+","t5","1.5","t6","float"], ["print","_","_","t6"], ["/","k","2","t7"], ["-","i","t7","t8"],
+  ["=","t8","_","i"], [">","i","0","t9"], ["GOTOV","t9","_","35","si es verdad, otra vuelta"], ["END","_","_","_"]
+];
+function pintarCuad(lista, idA, idB, corte) {
+  const fila = (q, n) => `<tr class="${q[4] && /empieza/.test(q[4]) ? "inicio" : ""}"><td class="n">${n}</td><td class="op">${q[0]}</td><td>${q[1]}</td><td>${q[2]}</td><td>${q[3]}</td><td class="etq">${q[4] || ""}</td></tr>`;
+  const cab = `<tr><th></th><th>op</th><th>izq</th><th>der</th><th>res</th><th></th></tr>`;
+  document.getElementById(idA).innerHTML = cab + lista.slice(0, corte).map((q, i) => fila(q, i + 1)).join("");
+  document.getElementById(idB).innerHTML = cab + lista.slice(corte).map((q, i) => fila(q, i + 1 + corte)).join("");
+}
+pintarCuad(PELOS, "pelos-a", "pelos-b", 24);
+pintarCuad(PATITO, "patito-a", "patito-b", 26);
+
+/* Memoria de ejecución. Valores obtenidos ejecutando los cuádruplos de arriba. */
+const V = "";
+const CASOS = [
+  { k: 3, salida: "6",
+    global: [["i",5],["j",15],["k",3],["t1",10],["t2",15],["t3",10],["uno",6]],
+    dos: [["i",10],["j",15],["x",25],["y",V],["t1",25],["t2",45],["t3","FALSE"],["t4",V],["t5",V],["t6",6]],
+    uno1: { titulo: "UNO(15) · llamada en el ELSE", v: [["j",15],["i",3],["t1",30],["t2",-27],["t3",-12],["t4",3],["t5","TRUE"],["t6",-12],["t7",6],["t8",V]] },
+    uno2: { titulo: "UNO(−12) · recursiva", v: [["j",-12],["i",3],["t1",-24],["t2",27],["t3",15],["t4",3],["t5","FALSE"],["t6",V],["t7",V],["t8",6]] },
+    nota: `<b>Ojo, la hoja de la profesora tiene un error aquí.</b> En la llamada recursiva pone <span class="tachado">t2 = −21</span>, pero t2 = k − t1 = 3 − (−24) = <b>27</b>. Con ese error salen <span class="tachado">t3 = −33, i = −45 y print −42</span>. Haciendo bien la resta: t3 = 15, i = 3, t8 = i + k = 6, y el programa imprime <b>6</b>. Coincide con el truco de abajo (2k = 6).`,
+    camino: "x = 25 y j·k = 45 → 25 > 45 es FALSO → else: uno(j = 15). Como 15 > 0 → uno(3 − 15 = −12). Como −12 ≤ 0 → regresa i + k = 6." },
+  { k: 0, salida: "0",
+    global: [["i",5],["j",15],["k",0],["t1",10],["t2",15],["t3",10],["uno",0]],
+    dos: [["i",10],["j",15],["x",25],["y",V],["t1",25],["t2",0],["t3","TRUE"],["t4",25],["t5",0],["t6",V]],
+    uno1: { titulo: "UNO(25) · llamada en el IF", v: [["j",25],["i",0],["t1",50],["t2",-50],["t3",-25],["t4",0],["t5","TRUE"],["t6",-25],["t7",0],["t8",V]] },
+    uno2: { titulo: "UNO(−25) · recursiva", v: [["j",-25],["i",0],["t1",-50],["t2",50],["t3",25],["t4",0],["t5","FALSE"],["t6",V],["t7",V],["t8",0]] },
+    nota: "Aquí la llamada a uno es la del bloque <b>verdadero</b> del if de dos (cuádruplos 24–29), no la del else. Por eso en DOS se llenan t4 y t5 y queda vacío t6.",
+    camino: "x = 25 y j·k = 0 → 25 > 0 es VERDAD → uno(x − k = 25). Como 25 > 0 → uno(0 − 25 = −25). Como −25 ≤ 0 → regresa i + k = 0 + 0 = 0." },
+  { k: 10, salida: "20",
+    global: [["i",5],["j",15],["k",10],["t1",10],["t2",15],["t3",10],["uno",20]],
+    dos: [["i",10],["j",15],["x",25],["y",V],["t1",25],["t2",150],["t3","FALSE"],["t4",V],["t5",V],["t6",20]],
+    uno1: { titulo: "UNO(15) · llamada en el ELSE", v: [["j",15],["i",10],["t1",30],["t2",-20],["t3",-5],["t4",10],["t5","TRUE"],["t6",-5],["t7",20],["t8",V]] },
+    uno2: { titulo: "UNO(−5) · recursiva", v: [["j",-5],["i",10],["t1",-10],["t2",20],["t3",15],["t4",10],["t5","FALSE"],["t6",V],["t7",V],["t8",20]] },
+    nota: "Igual que el Ejemplo 1, entra por el else de dos. La recursión se detiene en uno(−5) porque −5 ≤ 0.",
+    camino: "x = 25 y j·k = 150 → 25 > 150 es FALSO → else: uno(j = 15). Como 15 > 0 → uno(10 − 15 = −5). Como −5 ≤ 0 → regresa i + k = 10 + 10 = 20." }
+];
+function marco(clase, titulo, valores) {
+  return `<div class="marco"><h4>${titulo}</h4><table class="mem ${clase}">${valores.map(([n, v]) =>
+    `<tr><td class="var">${n}</td><td class="val">${v}</td></tr>`).join("")}</table></div>`;
+}
+function pintarCaso(i) {
+  const c = CASOS[i];
+  document.querySelectorAll(".pestanas button").forEach(b => b.setAttribute("aria-pressed", String(Number(b.dataset.caso) === i)));
+  document.getElementById("caso").innerHTML = `
+    <p style="margin-top:30px"><b>input:</b> <span class="salida" style="color:var(--tinta)">k = ${c.k}</span> &nbsp; <b>output:</b> <span class="salida">print → ${c.salida}</span></p>
+    <p><b class="tinta">Camino:</b> ${c.camino}</p>
+    <div class="scroll"><div class="memorias">
+      ${marco("g", "Global <small>(main)</small>", c.global)}
+      ${marco("d", "DOS(10, 15)", c.dos)}
+      ${marco("u1", c.uno1.titulo, c.uno1.v)}
+      ${marco("u2", c.uno2.titulo, c.uno2.v)}
+    </div></div>
+    <p class="nota">${c.nota}</p>`;
+}
+document.querySelectorAll(".pestanas button").forEach(b => b.addEventListener("click", () => pintarCaso(Number(b.dataset.caso))));
+pintarCaso(1);
+</script>

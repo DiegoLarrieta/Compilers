@@ -1,0 +1,7 @@
+program malo;
+var a, b : int;
+    a : float;
+main {
+    a = 1;
+}
+end

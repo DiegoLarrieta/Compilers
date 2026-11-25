@@ -47,7 +47,7 @@
   function dibuja(n) {
     if (n.k === "t") return '<span class="rr-t">' + esc(n.v) + "</span>";
     if (n.k === "n") return '<span class="rr-n">' + esc(n.v) + "</span>";
-    if (n.k === "p") return '<span class="rr-p' + (/^S/.test(n.v) ? " rr-ps" : "") + '" title="punto neurálgico ' + esc(n.v) + '">' + esc(n.v) + "</span>";
+    if (n.k === "p") return '<span class="rr-p' + (/^S/.test(n.v) ? " rr-ps" : (Number(n.v) >= 17 ? " rr-pn" : "")) + '" title="punto neurálgico ' + esc(n.v) + '">' + esc(n.v) + "</span>";
     if (n.k === "seq") return '<span class="rr-seq">' + n.s.map(dibuja).join(LN) + "</span>";
     if (n.k === "alt") return '<span class="rr-alt">' + n.a.map(function (a) { return fila(a); }).join("") + "</span>";
     var regreso = '<span class="rr-row rr-back">' + LN + '<span class="rr-loop" title="se repite">↺</span>' + (n.sep ? LN + dibuja(n.sep) : "") + FILL + "</span>";

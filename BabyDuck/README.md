@@ -10,6 +10,7 @@ que necesita para correr, más su documento (`documentacion.html`).
 | `Entrega1` | Scanner y parser                          | `lexer.py`, `parser.py`, plan de pruebas                          |
 | `Entrega2` | Semántica de variables y cubo semántico   | `cubo_semantico.py`, `directorio.py`, puntos neurálgicos          |
 | `Entrega3` | Código de expresiones y estatutos lineales| `estructuras.py` (pilas y fila), `cuadruplos.py`                  |
+| `Entrega4` | Estatutos, funciones y direcciones virtuales | `memoria.py`, saltos (`GOTOF`/`GOTO`), `ERA`/`PARAM`/`GOSUB`     |
 
 ## Instalación
 
@@ -22,7 +23,9 @@ python3 -m venv .venv
 ## Uso
 
 ```bash
-cd Entrega3
+cd Entrega4
+../.venv/bin/python main.py programas/funciones.bd --tablas     # cuádruplos con direcciones
+cd ../Entrega3
 ../.venv/bin/python main.py programas/expresiones.bd            # cuádruplos
 ../.venv/bin/python main.py programas/precedencia.bd --traza    # pilas paso a paso
 ../.venv/bin/python main.py programas/factorial.bd --tablas     # directorio de funciones

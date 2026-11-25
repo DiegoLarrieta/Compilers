@@ -1,0 +1,6 @@
+program p;
+void doble(n : int) [ { } ];
+main {
+    doble(2.5);
+}
+end
