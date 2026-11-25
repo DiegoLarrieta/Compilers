@@ -1,0 +1,229 @@
+<h2>1. Avance real de esta entrega</h2>
+<div class="tabla"><table>
+<thead><tr><th>Elemento que pide la entrega</th><th>Estado</th><th>Detalle</th></tr></thead>
+<tbody>
+<tr><td>1. Variables, constantes y temporales traducidos a direcciones virtuales</td><td class="ok">Completo</td><td><code>memoria.py</code>. Todos los cuádruplos usan direcciones; la tabla de constantes reutiliza la dirección de un valor repetido.</td></tr>
+<tr><td>2. Cuádruplos de estatutos condicionales y cíclicos</td><td class="ok">Completo</td><td><code>if</code>, <code>if-else</code> y <code>while</code>, incluso anidados, con <code>GOTOF</code>, <code>GOTO</code> y la pila de saltos.</td></tr>
+<tr><td>3. Cuádruplos de declaración e invocación de funciones</td><td class="ok">Completo</td><td><code>GOTO</code> a main, <code>ENDFUNC</code>, <code>ERA</code>, <code>PARAM</code>, <code>GOSUB</code> y <code>END</code>. Se valida el número y el tipo de los argumentos. Se permite la recursión.</td></tr>
+<tr><td>4. Diagramas con puntos neurálgicos, su descripción y la distribución de direcciones</td><td class="ok">Completo</td><td>Secciones 2, 6 y 7 de este documento.</td></tr>
+<tr><td>Ejecución de los cuádruplos (máquina virtual)</td><td>Siguiente entrega</td><td>El directorio ya guarda lo que la máquina virtual necesita: dónde empieza cada función y cuánta memoria usa.</td></tr>
+</tbody></table></div>
+
+<h2>2. Distribución de direcciones virtuales</h2>
+<p>En los cuádruplos ya no aparecen nombres sino números. Cada dato recibe una <strong>dirección virtual</strong> según el <strong>segmento</strong> al que pertenece y su <strong>tipo</strong>. Cada combinación tiene un rango de 1000 direcciones:</p>
+<div class="tabla"><table>
+<thead><tr><th>Segmento</th><th>int</th><th>float</th><th>bool</th><th>letrero</th><th>Qué guarda</th></tr></thead>
+<tbody>
+<tr><td><strong>Global</strong></td><td>1000 – 1999</td><td>2000 – 2999</td><td></td><td></td><td>Variables del <code>var</code> del programa.</td></tr>
+<tr><td><strong>Local</strong></td><td>3000 – 3999</td><td>4000 – 4999</td><td></td><td></td><td>Parámetros y variables de una función.</td></tr>
+<tr><td><strong>Temporal</strong></td><td>5000 – 5999</td><td>6000 – 6999</td><td>7000 – 7999</td><td></td><td>Resultados intermedios de una función o de main.</td></tr>
+<tr><td><strong>Constante</strong></td><td>8000 – 8999</td><td>9000 – 9999</td><td></td><td>10000 – 10999</td><td>Números y letreros que aparecen en el programa.</td></tr>
+</tbody></table></div>
+<h3>Decisiones de diseño</h3>
+<ul>
+<li><strong>El rango dice el segmento y el tipo.</strong> Con solo comparar rangos se sabe que 6003 es un temporal <code>float</code>. La máquina virtual no necesita guardar el tipo aparte (<code>segmento_y_tipo()</code> en <code>memoria.py</code>).</li>
+<li><strong>Locales y temporales se reinician en cada función.</strong> Cada llamada tendrá su propia copia de esa memoria, así que las direcciones de dos funciones distintas pueden coincidir sin chocar. Main también empieza sus temporales desde 5000.</li>
+<li><strong><code>bool</code> solo existe como temporal</strong>, porque en BabyDuck no se pueden declarar variables <code>bool</code>: solo resultan de <code>&gt; &lt; !=</code>.</li>
+<li><strong>Cada constante distinta recibe una sola dirección</strong> (tabla de constantes). Si <code>1</code> aparece diez veces, las diez usan 8000. Los letreros de <code>print</code> son constantes de tipo letrero.</li>
+<li><strong>Los parámetros son locales.</strong> Reciben las primeras direcciones locales de la función, en orden. <code>PARAM</code> copia el argumento a esa dirección.</li>
+<li>Si un segmento se llena (más de 1000 datos de un tipo), el compilador reporta un error.</li>
+</ul>
+<h3>Implementación: <code>memoria.py</code></h3>
+<div class="tabla"><table>
+<thead><tr><th>Clase / función</th><th>Qué hace</th></tr></thead>
+<tbody>
+<tr><td><code>BASES</code></td><td>Diccionario <code>(segmento, tipo) → dirección base</code>. Es la tabla de arriba.</td></tr>
+<tr><td><code>Segmento</code></td><td>Un contador por tipo. <code>asignar(tipo)</code> regresa la siguiente dirección libre; <code>conteo()</code> dice cuántas se usaron.</td></tr>
+<tr><td><code>MemoriaVirtual</code></td><td>Los cuatro segmentos y la tabla de constantes (<code>dict</code> de <code>(tipo, valor) → dirección</code>). <code>nuevo_alcance()</code> reinicia locales y temporales.</td></tr>
+</tbody></table></div>
+<h3>Recursos de cada función</h3>
+<p>Al cerrar una función se guarda en su entrada del directorio cuántas direcciones locales y temporales de cada tipo usó. Es lo que <code>ERA</code> le dirá a la máquina virtual que reserve. También se guarda el número del cuádruplo donde empieza la función, que es el destino de <code>GOSUB</code>.</p>
+<pre><code>$ python main.py programas/factorial.bd --tablas   (directorio y constantes)
+{{cmd:Entrega4|main.py programas/factorial.bd --tablas}}</code></pre>
+
+<h2>3. Cuádruplos nuevos</h2>
+<div class="tabla"><table>
+<thead><tr><th>Cuádruplo</th><th>Significado</th></tr></thead>
+<tbody>
+<tr><td><code>(GOTO, _, _, n)</code></td><td>Brincar al cuádruplo n.</td></tr>
+<tr><td><code>(GOTOF, cond, _, n)</code></td><td>Si <code>cond</code> es falsa, brincar al cuádruplo n; si es verdadera, seguir con el siguiente.</td></tr>
+<tr><td><code>(ERA, _, _, f)</code></td><td>Reservar la memoria local y temporal de la función f (sus recursos en el directorio).</td></tr>
+<tr><td><code>(PARAM, arg, _, dir)</code></td><td>Copiar el valor de <code>arg</code> (en la memoria de quien llama) a la dirección <code>dir</code> del parámetro (en la memoria nueva de f).</td></tr>
+<tr><td><code>(GOSUB, f, _, n)</code></td><td>Guardar a dónde regresar y brincar al cuádruplo n, donde empieza f.</td></tr>
+<tr><td><code>(ENDFUNC, _, _, _)</code></td><td>Terminar la función: liberar su memoria y regresar después del GOSUB.</td></tr>
+<tr><td><code>(END, _, _, _)</code></td><td>Fin del programa.</td></tr>
+</tbody></table></div>
+<p>Los de la entrega 3 (<code>+ - * / &gt; &lt; != = neg print</code>) son iguales, pero con direcciones. <code>main.py</code> imprime cada cuádruplo dos veces: con direcciones (lo que de verdad se genera) y, al lado, con nombres, solo para leerlo.</p>
+
+<h2>4. Estatutos condicionales y cíclicos</h2>
+<p>El problema: cuando se genera el <code>GOTOF</code> de un <code>if</code>, todavía no se sabe a dónde brincar, porque el cuerpo aún no se ha traducido. La solución es generar el salto con el destino <strong>pendiente</strong>, guardar su número en la <strong>pila de saltos (PSaltos)</strong> y <strong>rellenarlo</strong> cuando se llegue al destino. Para poder rellenar el cuádruplo n se cambió la fila: ahora es una lista con índice al frente, con acceso por posición en O(1) (en la entrega 3 era un <code>deque</code>, que cuesta O(n) para llegar a un elemento de en medio).</p>
+<div class="tabla"><table>
+<thead><tr><th>Estatuto</th><th>Forma de los cuádruplos</th></tr></thead>
+<tbody>
+<tr><td><code>if (c) { A };</code></td><td><pre><code>   cuádruplos de c  → t
+   GOTOF t, _, fin
+   cuádruplos de A
+fin:</code></pre></td></tr>
+<tr><td><code>if (c) { A } else { B };</code></td><td><pre><code>   cuádruplos de c  → t
+   GOTOF t, _, inicioB
+   cuádruplos de A
+   GOTO _, _, fin
+inicioB:
+   cuádruplos de B
+fin:</code></pre></td></tr>
+<tr><td><code>while (c) do { A };</code></td><td><pre><code>regreso:
+   cuádruplos de c  → t
+   GOTOF t, _, fin
+   cuádruplos de A
+   GOTO _, _, regreso
+fin:</code></pre></td></tr>
+</tbody></table></div>
+<p>Como PSaltos es una pila, los estatutos anidados funcionan solos: el salto que se rellena siempre es el del estatuto más interno que sigue abierto.</p>
+<h3>La pila de saltos paso a paso</h3>
+<p class="pie-codigo">programas/saltos.bd</p>
+<pre><code>{{archivo:Entrega4/programas/saltos.bd}}</code></pre>
+<pre><code>$ python main.py programas/saltos.bd --traza
+{{cmd:Entrega4|main.py programas/saltos.bd --traza}}</code></pre>
+<ul>
+<li>PSaltos guarda primero el <strong>1</strong> (el GOTO a main), después el <strong>2</strong> (a donde regresa el while), el <strong>3</strong> (GOTOF del while) y el <strong>5</strong> (GOTOF del if).</li>
+<li>En el <code>else</code> se genera el GOTO 7 y se rellena el 5 con 8: si <code>a &gt; b</code> es falso, se brinca al inicio del else.</li>
+<li>Al terminar el if se rellena el 7 con 9. Al terminar el while se genera <code>(GOTO, _, _, 2)</code> y se rellena el 3 con 12.</li>
+</ul>
+
+<h2>5. Declaración e invocación de funciones</h2>
+<h3>Declaración</h3>
+<ul>
+<li>El código de las funciones se genera antes que el de main, así que el <strong>cuádruplo 1</strong> es <code>(GOTO, _, _, ???)</code>. Se rellena al llegar a <code>main</code>.</li>
+<li>Después de declarar parámetros y variables se anota en el directorio el número del siguiente cuádruplo: ahí empieza la función.</li>
+<li>Al terminar el cuerpo se genera <code>ENDFUNC</code> y se guardan los recursos que usó la función.</li>
+</ul>
+<h3>Invocación: <code>f(arg1, arg2);</code></h3>
+<ol>
+<li>Al leer <code>f</code>: se verifica que exista y se genera <code>(ERA, _, _, f)</code>.</li>
+<li>Por cada argumento: se traducen los cuádruplos de su expresión, se saca su resultado de PilaO, se valida con el cubo que su tipo se pueda asignar al parámetro k (a un <code>float</code> se le puede pasar un <code>int</code>, al revés no) y se genera <code>(PARAM, resultado, _, dirección del parámetro k)</code>.</li>
+<li>Al leer <code>)</code>: se valida que el número de argumentos sea el de parámetros y se genera <code>(GOSUB, f, _, inicio de f)</code>.</li>
+</ol>
+<p>La función se agrega al directorio antes de traducir su cuerpo y su inicio se conoce antes del primer estatuto, así que una función puede llamarse a sí misma.</p>
+<p class="pie-codigo">programas/funciones.bd</p>
+<pre><code>{{archivo:Entrega4/programas/funciones.bd}}</code></pre>
+<pre><code>$ python main.py programas/funciones.bd --tablas
+{{cmd:Entrega4|main.py programas/funciones.bd --tablas}}</code></pre>
+<ul>
+<li>Cuádruplo 1: brinca las tres funciones hasta main (23).</li>
+<li><code>suma</code> y <code>cuenta</code> tienen sus parámetros en 3000 y 3001: cada una tiene su propia memoria local.</li>
+<li>Cuádruplos 24 a 26: el segundo argumento <code>4 * 2</code> se calcula entre los dos <code>PARAM</code>.</li>
+<li>Cuádruplo 29: <code>total</code> es <code>int</code> y el parámetro <code>valor</code> es <code>float</code>; se permite.</li>
+<li>Cuádruplos 18 a 21: <code>cuenta</code> se llama a sí misma; <code>GOSUB</code> brinca a su propio inicio (15).</li>
+</ul>
+
+<h2>6. Diagramas con puntos neurálgicos</h2>
+<p class="leyenda"><span><span class="pt n">17</span> punto nuevo de esta entrega</span><span><span class="pt">4</span> punto de la entrega 3</span><span><span class="pt s">S7</span> punto semántico de la entrega 2</span></p>
+<div class="diagramas">
+<div class="rr" data-rule="PROGRAMA">'program' 'id' @S1 @17 ';' [ VARS ] { FUNCS } 'main' @28 BODY 'end' @29</div>
+<div class="rr" data-rule="VARS">'var' { { 'id' / ',' }+ ':' TYPE ';' @S2 }+</div>
+<div class="rr" data-rule="FUNCS">'void' 'id' @S3 '(' [ { 'id' ':' TYPE @S4 / ',' }+ ] ')' '[' [ VARS ] @23 BODY ']' @24 ';'</div>
+<div class="rr" data-rule="BODY">'{' { STATEMENT } '}'</div>
+<div class="rr" data-rule="STATEMENT">( ASSIGN | CONDITION | CYCLE | F_CALL | PRINT )</div>
+<div class="rr" data-rule="ASSIGN">'id' @S6 @10 '=' @11 EXPRESIÓN @12 ';'</div>
+<div class="rr" data-rule="CONDITION">'if' '(' EXPRESIÓN ')' @18 BODY [ 'else' @19 BODY ] @20 ';'</div>
+<div class="rr" data-rule="CYCLE">'while' @21 '(' EXPRESIÓN ')' @18 'do' BODY @22 ';'</div>
+<div class="rr" data-rule="F_CALL">'id' @S8 @25 '(' [ { EXPRESIÓN @26 / ',' }+ ] ')' @27 ';'</div>
+<div class="rr" data-rule="PRINT">'print' '(' { ( EXPRESIÓN @13 | 'cte_string' @14 ) / ',' }+ ')' ';'</div>
+<div class="rr" data-rule="EXPRESIÓN">EXP [ ( '&gt;' | '&lt;' | '!=' ) @3 EXP @6 ]</div>
+<div class="rr" data-rule="EXP">{ TÉRMINO @5 / ( '+' | '-' ) @3 }+</div>
+<div class="rr" data-rule="TÉRMINO">{ FACTOR @4 / ( '*' | '/' ) @3 }+</div>
+<div class="rr" data-rule="FACTOR">( '(' @7 EXPRESIÓN ')' @8 | [ ( '+' | '-' ) ] ( 'id' @S7 @1 | CTE @2 ) @9 )</div>
+</div>
+
+<h3>Acción de cada punto</h3>
+<div class="tabla"><table>
+<thead><tr><th>Punto</th><th>Acción</th><th>En <code>parser.py</code></th></tr></thead>
+<tbody>
+<tr><td><span class="pt s">S1</span> <span class="pt n">17</span></td><td>Crea el alcance global con el nombre del programa. Genera <code>(GOTO, _, _, ???)</code> y mete su número (1) a PSaltos.</td><td><code>np_crear_programa</code></td></tr>
+<tr><td><span class="pt s">S2</span></td><td>Da de alta cada variable de la lista en la tabla del alcance actual (error si está repetida) y le <strong>asigna su dirección</strong>: segmento global si es del programa, local si es de una función.</td><td><code>p_decl</code></td></tr>
+<tr><td><span class="pt s">S3</span></td><td>Crea la entrada de la función (error si ya existe) y la vuelve el alcance actual. Reinicia los contadores locales y temporales.</td><td><code>np_crear_funcion</code></td></tr>
+<tr><td><span class="pt s">S4</span></td><td>Agrega el parámetro como variable local con su dirección, y anota su tipo y su dirección en la firma de la función.</td><td><code>p_param</code></td></tr>
+<tr><td><span class="pt n">23</span></td><td>Guarda en el directorio el número del siguiente cuádruplo: es donde empieza la función.</td><td><code>np_empezar_funcion</code></td></tr>
+<tr><td><span class="pt n">24</span> <span class="pt s">S5</span></td><td>Genera <code>(ENDFUNC, _, _, _)</code>, guarda los recursos locales y temporales de la función y regresa al alcance global.</td><td><code>np_cerrar_funcion</code></td></tr>
+<tr><td><span class="pt n">28</span></td><td>Saca el 1 de PSaltos y lo rellena con el siguiente cuádruplo (inicio de main). Reinicia los temporales.</td><td><code>np_empezar_main</code></td></tr>
+<tr><td><span class="pt n">29</span></td><td>Genera <code>(END, _, _, _)</code> y guarda los recursos globales.</td><td><code>p_programa</code></td></tr>
+<tr><td><span class="pt s">S6</span> <span class="pt">10</span></td><td>La variable destino debe existir. Mete su dirección a PilaO y su tipo a PTipos.</td><td><code>np_meter_destino</code></td></tr>
+<tr><td><span class="pt">11</span> <span class="pt">3</span></td><td>Mete el operador (<code>=</code>, aritmético o relacional) a POper.</td><td><code>np_meter_operador</code></td></tr>
+<tr><td><span class="pt">12</span></td><td>Valida con el cubo que el valor se pueda asignar y genera <code>(=, valor, _, destino)</code>.</td><td><code>np_generar_asigna</code></td></tr>
+<tr><td><span class="pt n">18</span></td><td>Saca el resultado de la condición; debe ser <code>bool</code>. Genera <code>(GOTOF, resultado, _, ???)</code> y mete su número a PSaltos.</td><td><code>np_gotof</code></td></tr>
+<tr><td><span class="pt n">19</span></td><td>Genera <code>(GOTO, _, _, ???)</code>. Saca el GOTOF de PSaltos y lo rellena con el siguiente cuádruplo (inicio del else). Mete el GOTO a PSaltos.</td><td><code>np_else</code></td></tr>
+<tr><td><span class="pt n">20</span></td><td>Saca el salto pendiente (el GOTOF, o el GOTO si hubo else) y lo rellena con el siguiente cuádruplo.</td><td><code>np_terminar_if</code></td></tr>
+<tr><td><span class="pt n">21</span></td><td>Mete a PSaltos el número del siguiente cuádruplo: a donde se regresa en cada vuelta.</td><td><code>np_inicio_ciclo</code></td></tr>
+<tr><td><span class="pt n">22</span></td><td>Saca el GOTOF y el regreso de PSaltos. Genera <code>(GOTO, _, _, regreso)</code> y rellena el GOTOF con el siguiente cuádruplo.</td><td><code>np_terminar_ciclo</code></td></tr>
+<tr><td><span class="pt n">25</span> <span class="pt s">S8</span></td><td>La función debe existir. Genera <code>(ERA, _, _, f)</code> y abre un contador de argumentos para esta llamada.</td><td><code>np_era</code></td></tr>
+<tr><td><span class="pt n">26</span></td><td>Saca el resultado del argumento k. Valida su tipo contra el parámetro k y genera <code>(PARAM, resultado, _, dirección del parámetro k)</code>.</td><td><code>np_param</code></td></tr>
+<tr><td><span class="pt n">27</span></td><td>Valida que el número de argumentos sea el de parámetros y genera <code>(GOSUB, f, _, inicio de f)</code>.</td><td><code>np_gosub</code></td></tr>
+<tr><td><span class="pt">13</span></td><td>Saca el resultado de la expresión y genera <code>(print, _, _, dirección)</code>.</td><td><code>np_print_expresion</code></td></tr>
+<tr><td><span class="pt">14</span></td><td>Busca o crea la dirección del letrero en la tabla de constantes y genera <code>(print, _, _, dirección)</code>.</td><td><code>p_item_print_letrero</code></td></tr>
+<tr><td><span class="pt s">S7</span> <span class="pt">1</span></td><td>La variable debe existir (local primero, global después). Mete su dirección a PilaO y su tipo a PTipos.</td><td><code>p_operando_id</code></td></tr>
+<tr><td><span class="pt">2</span></td><td>Busca o crea la dirección de la constante en la tabla de constantes y la mete a PilaO.</td><td><code>p_operando_cte</code></td></tr>
+<tr><td><span class="pt">4</span> <span class="pt">5</span> <span class="pt">6</span></td><td>Si el tope de POper es <code>* /</code>, <code>+ -</code> o relacional (respectivamente), saca operador y operandos, valida con el cubo, pide un temporal <strong>del tipo resultante</strong> (su dirección depende del tipo) y genera el cuádruplo.</td><td><code>np_resolver_*</code></td></tr>
+<tr><td><span class="pt">7</span> <span class="pt">8</span></td><td>Mete y quita el fondo falso de los paréntesis.</td><td><code>np_fondo_falso</code>, <code>np_quitar_fondo</code></td></tr>
+<tr><td><span class="pt">9</span></td><td>Solo si el signo es <code>-</code>: a una constante le cambia el signo (otra entrada en la tabla de constantes); a una variable le genera <code>(neg, x, _, temporal)</code>.</td><td><code>np_negar</code></td></tr>
+</tbody></table></div>
+<p>Los puntos 15 y 16 de la entrega 3 (validar la condición y descartar argumentos) se reemplazaron por los puntos 18 y 26, que además generan el GOTOF y el PARAM. En el código, cada punto <code>np_*</code> es un no terminal vacío puesto exactamente donde va el punto:</p>
+<pre><code>programa  : PROGRAM ID np_crear_programa SEMICOLON vars_opt funcs MAIN np_empezar_main body END
+func      : VOID ID np_crear_funcion LPAREN params_opt RPAREN LBRACKET vars_opt np_empezar_funcion
+            body RBRACKET np_cerrar_funcion SEMICOLON
+condicion : IF LPAREN expresion RPAREN np_gotof body else_opt np_terminar_if SEMICOLON
+else_opt  : ELSE np_else body  |  empty
+ciclo     : WHILE np_inicio_ciclo LPAREN expresion RPAREN np_gotof DO body np_terminar_ciclo SEMICOLON
+llamada   : ID np_era LPAREN args_opt RPAREN np_gosub SEMICOLON
+lista_args: expresion np_param COMMA lista_args  |  expresion np_param</code></pre>
+
+<h2>7. Otro ejemplo: ciclo con if-else adentro</h2>
+<p class="pie-codigo">programas/ciclos.bd</p>
+<pre><code>{{archivo:Entrega4/programas/ciclos.bd}}</code></pre>
+<pre><code>$ python main.py programas/ciclos.bd
+{{cmd:Entrega4|main.py programas/ciclos.bd}}</code></pre>
+<p>El <code>if</code> sin <code>else</code> del final (cuádruplo 20) solo necesita un GOTOF. La constante <code>2</code> aparece dos veces en <code>i / 2 * 2</code> y las dos usan la dirección 8002.</p>
+
+<h2>8. Errores nuevos</h2>
+<div class="tabla"><table>
+<thead><tr><th>Error</th><th>Punto</th><th>Programa de prueba</th></tr></thead>
+<tbody>
+<tr><td>Número de argumentos distinto al de parámetros</td><td><span class="pt n">27</span></td><td><code>error_faltan_argumentos.bd</code></td></tr>
+<tr><td>Argumento de un tipo que no se puede asignar al parámetro</td><td><span class="pt n">26</span></td><td><code>error_tipo_argumento.bd</code></td></tr>
+<tr><td>Condición de <code>if</code> o <code>while</code> que no es <code>bool</code></td><td><span class="pt n">18</span></td><td><code>error_condicion_no_bool.bd</code></td></tr>
+<tr><td>Se acabó un segmento de memoria (más de 1000 datos de un tipo)</td><td><span class="pt s">S2</span> y los que piden direcciones</td><td>Prueba <code>test_segmento_lleno</code></td></tr>
+</tbody></table></div>
+<pre><code>{{cmd:Entrega4|main.py programas/error_faltan_argumentos.bd}}
+{{cmd:Entrega4|main.py programas/error_tipo_argumento.bd}}
+{{cmd:Entrega4|main.py programas/error_condicion_no_bool.bd}}</code></pre>
+
+<h2>9. Pruebas</h2>
+<p><code>test_entrega4.py</code> revisa los rangos de memoria, la asignación de direcciones a globales, locales, parámetros, temporales (por tipo) y constantes (sin repetir), los recursos de cada función, los saltos de <code>if</code>, <code>if-else</code>, <code>while</code> y estatutos anidados cuádruplo por cuádruplo, que ningún salto quede pendiente, y <code>ERA</code>/<code>PARAM</code>/<code>GOSUB</code>/<code>ENDFUNC</code>, la recursión y los errores de argumentos. Las pruebas de las entregas 1 a 3 se siguen corriendo; las de la 3 comparan la versión con nombres de cada cuádruplo.</p>
+<pre><code>$ python -m unittest
+{{cmd:Entrega4|-m unittest}}</code></pre>
+
+<h2>10. Archivos</h2>
+<div class="tabla"><table>
+<thead><tr><th>Archivo</th><th>Contenido</th><th>Estado</th></tr></thead>
+<tbody>
+<tr><td><code>memoria.py</code></td><td>Distribución de direcciones virtuales, segmentos y tabla de constantes.</td><td>Nuevo</td></tr>
+<tr><td><code>cuadruplos.py</code></td><td>Cuádruplos con direcciones (y versión legible), pila de saltos, if/else/while, ERA/PARAM/GOSUB/ENDFUNC/END.</td><td>Modificado</td></tr>
+<tr><td><code>parser.py</code></td><td>Puntos 17 a 29.</td><td>Modificado</td></tr>
+<tr><td><code>directorio.py</code></td><td>Dirección de cada variable, inicio y recursos de cada función.</td><td>Modificado</td></tr>
+<tr><td><code>estructuras.py</code></td><td>La fila permite consultar y rellenar un cuádruplo por su número en O(1).</td><td>Modificado</td></tr>
+<tr><td><code>main.py</code></td><td>Muestra la tabla de constantes y los cuádruplos con direcciones y con nombres.</td><td>Modificado</td></tr>
+<tr><td><code>cubo_semantico.py</code>, <code>lexer.py</code>, <code>errores.py</code></td><td>Entregas anteriores.</td><td>Sin cambios</td></tr>
+<tr><td><code>test_entrega4.py</code>, programas <code>saltos</code>, <code>ciclos</code>, <code>funciones</code>, <code>error_faltan_argumentos</code>, <code>error_tipo_argumento</code></td><td>Pruebas de esta entrega.</td><td>Nuevos</td></tr>
+</tbody></table></div>
+<pre><code>cd BabyDuck/Entrega4
+../.venv/bin/python main.py programas/funciones.bd --tablas
+../.venv/bin/python main.py programas/saltos.bd --traza
+../.venv/bin/python -m unittest -v</code></pre>
+
+<h2>11. Apoyo de IA</h2>
+<div class="tabla"><table>
+<tbody>
+<tr><th>Herramienta</th><td>Claude Code (asistente de programación de Anthropic) en la terminal.</td></tr>
+<tr><th>Consultas de apoyo</th><td>Antes de esta entrega se le pidió a la IA un curso interactivo de la materia para estudiar desde los primeros principios: expresiones regulares, autómatas, gramáticas, derivaciones, análisis LL y LR (con los ejercicios de clase resueltos paso a paso), análisis semántico y cuádruplos.</td></tr>
+<tr><th>Qué generó</th><td><code>memoria.py</code>, los cambios a <code>cuadruplos.py</code>, <code>parser.py</code>, <code>directorio.py</code>, <code>estructuras.py</code> y <code>main.py</code>, los programas de prueba, <code>test_entrega4.py</code>, los diagramas y este documento.</td></tr>
+<tr><th>Cómo se verificó</th><td>Pruebas automatizadas que comparan cuádruplo por cuádruplo, y revisión a mano de los saltos y llamadas de los ejemplos. Las salidas de este documento las produce el código al construir el documento.</td></tr>
+</tbody></table></div>

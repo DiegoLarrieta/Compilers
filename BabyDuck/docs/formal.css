@@ -28,6 +28,7 @@ pre code { font: inherit; }
 .ok { font-weight: bold; } .err { font-weight: bold; }
 .pt, .rr-p { display: inline-flex; align-items: center; justify-content: center; min-width: 5.2mm; height: 5.2mm; padding: 0 1mm; border-radius: 99px; background: #f2b705; color: #000; font: bold 8pt Menlo, monospace; flex: none; }
 .pt.s, .rr-p.rr-ps { background: #fff; border: 1.2pt solid #f2b705; }
+.pt.n, .rr-p.rr-pn { background: #0033a0; color: #fff; }
 .leyenda { font-size: 10pt; } .leyenda span { margin-right: 5mm; }
 .diagramas { margin-bottom: 4mm; }
 .rr { display: block; border: 0.75pt solid #000; padding: 2mm 3mm 3mm; margin-bottom: 2mm; page-break-inside: avoid; zoom: .68; }

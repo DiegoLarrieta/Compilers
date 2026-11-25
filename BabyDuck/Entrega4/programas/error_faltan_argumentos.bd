@@ -1,0 +1,6 @@
+program p;
+void suma(a : int, b : int) [ { } ];
+main {
+    suma(1);
+}
+end

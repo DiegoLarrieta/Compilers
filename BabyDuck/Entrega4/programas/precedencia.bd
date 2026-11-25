@@ -1,0 +1,7 @@
+program precedencia;
+var a, b, c, d : int;
+main {
+    a = b + c * d;
+    a = (b + c) * d;
+}
+end

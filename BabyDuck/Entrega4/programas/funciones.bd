@@ -1,0 +1,39 @@
+program funciones;
+var total : int;
+    promedio : float;
+
+void suma(a : int, b : int) [
+    {
+        total = a + b;
+    }
+];
+
+void escala(valor : float, veces : int) [
+    var k : int;
+    {
+        k = 0;
+        while (k < veces) do {
+            valor = valor * 2.0;
+            k = k + 1;
+        };
+        promedio = valor;
+    }
+];
+
+void cuenta(n : int) [
+    {
+        if (n > 0) {
+            print(n);
+            cuenta(n - 1);
+        };
+    }
+];
+
+main {
+    suma(3, 4 * 2);
+    escala(total, 3);
+    escala(1.5, total - 9);
+    cuenta(3);
+    print("total", total, "promedio", promedio);
+}
+end

@@ -1,0 +1,28 @@
+program alcances;
+var total, contador : int;
+    promedio : float;
+
+void acumula(valor : int, peso : float) [
+    var total : float;
+        temporal : int;
+    {
+        temporal = valor;
+        total = temporal * peso;
+        contador = contador + 1;
+    }
+];
+
+void reporta() [
+    {
+        print("total", total, "promedio", promedio);
+    }
+];
+
+main {
+    total = 0;
+    contador = 0;
+    acumula(10, 0.5);
+    promedio = total / 2;
+    reporta();
+}
+end

@@ -29,6 +29,8 @@ ENTREGAS = [
     ("Entrega 1", "Scanner y parser", "Selección de herramienta, scanner y parser en Python con PLY, y plan de pruebas."),
     ("Entrega 2", "Semántica de variables", "Cubo semántico, directorio de funciones, tablas de variables y sus puntos neurálgicos."),
     ("Entrega 3", "Cuádruplos", "Pilas, fila y traducción de expresiones y estatutos lineales a cuádruplos."),
+    ("Entrega 4", "Estatutos, funciones y direcciones virtuales",
+     "Cuádruplos de if, else y while; declaración e invocación de funciones; direcciones virtuales."),
 ]
 
 FUENTES = ('<link rel="stylesheet" href="https://fonts.googleapis.com/css2?'
@@ -121,7 +123,10 @@ MATRICULA = "A01275640"
 PROFESORA = "Elda Quiroga"
 MATERIA = "Desarrollo de aplicaciones avanzadas de ciencias computacionales"
 CLAVE = "TC3002B"
-FECHA = "15 de noviembre del 2026"
+# Fecha y subtítulo de la portada formal de cada entrega.
+FECHAS = {3: "15 de noviembre del 2026", 4: "22 de noviembre del 2026"}
+SUBTITULOS = {3: "código de expresiones y estatutos",
+              4: "entrega #4"}
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
 
@@ -143,13 +148,13 @@ def construir_formal(numero):
 <h1>{nombre}</h1>
 <p>{ALUMNO}</p>
 <p>Profesora: {PROFESORA}</p>
-<p>{FECHA}</p>
+<p>{FECHAS[numero]}</p>
 <p class="materia">{CLAVE}</p>
 <p>{MATERIA}</p>
 </section>
 <table class="hoja"><thead><tr><td><img src="{logo}" alt=""></td></tr></thead>
 <tbody><tr><td>
-<p class="titulo">BabyDuck: {titulo} (código de expresiones y estatutos)</p>
+<p class="titulo">BabyDuck: {titulo} ({SUBTITULOS[numero]})</p>
 {cuerpo}
 </td></tr></tbody></table>
 <script>
